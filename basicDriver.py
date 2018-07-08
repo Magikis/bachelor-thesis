@@ -1,4 +1,6 @@
+from __future__ import print_function
 from snakeoil import Client
+import sys
 import json
 
 responseAttr = ['accel',
@@ -9,10 +11,39 @@ responseAttr = ['accel',
                 'focus',
                 'stear']
 
-x = 100
+it = 0
 
 
 def drive(state):
+    response = getDeafaultResponse(state)
+    print('anglel: ', state['angle'], 'trackPos: ', state['trackPos'])
+
+    goalSpeed = 150
+    if abs(state['trackPos']) > 1:
+        goalSpeed = 20
+
+    if state['speedX'] > goalSpeed:
+        response['accel'] = 0
+    else:
+        response['accel'] = 1
+
+    targetAngle = 0
+    if state['trackPos'] > 0.01:
+        targetAngle = 0.1
+    if state['trackPos'] < -0.01:
+        targetAngle = -0.1
+
+    if abs(state['angle'] - targetAngle) > 0.025:
+        turningForce = 0.4
+        if state['angle'] < targetAngle:
+            response['steer'] = -turningForce
+        else:
+            response['steer'] = turningForce
+
+    return response
+
+
+def getDeafaultResponse(state):
     response = {
         'gear': 1,
         'clutch': 0,
@@ -32,16 +63,6 @@ def drive(state):
         response['gear'] = 5
     if state['speedX'] > 170:
         response['gear'] = 6
-
-    global x
-    if x <= 250:
-        response['accel'] = 1
-        response['break'] = 0
-    else:
-        response['accel'] = 0
-        response['brake'] = 1
-
-    x = (x + 1) % 500
     return response
 
 
@@ -54,6 +75,7 @@ def drivingLoop(drivingFunc):
         for k in C.R.d:
             C.R.d[k] = response[k]
         print(C.R.d)
+        sys.stdout.flush()
         C.respond_to_server()
     C.shutdown()
 
