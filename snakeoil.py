@@ -26,7 +26,7 @@
 # dictionary which holds various option values (see `default_options`
 # variable for all the details) but you probably only need a few
 # things from it. Mainly the `trackname` and `stage` are important
-# when developing a strategic bot. 
+# when developing a strategic bot.
 #
 # This dictionary also contains a ServerState object
 # (key=S) and a DriverAction object (key=R for response). This allows
@@ -40,8 +40,8 @@
 # The syntax specifically would be something like:
 #    X= o[S.d['tracPos']]
 # And you can set the following:
-#    accel, brake, clutch, gear, steer, focus, meta 
-# The syntax is:  
+#    accel, brake, clutch, gear, steer, focus, meta
+# The syntax is:
 #     o[R.d['steer']]= X
 # Note that it is 'steer' and not 'steering' as described in the manual!
 # All values should be sensible for their type, including lists being lists.
@@ -52,7 +52,7 @@
 # sufficient for getting around most tracks.
 # Try `snakeoil.py --help` to get started.
 
-import socket 
+import socket
 import json
 import sys
 import getopt
@@ -82,7 +82,7 @@ def clip(v,lo,hi):
 
 def bargraph(x,mn,mx,w,c='X'):
     '''Draws a simple asciiart bar graph. Very handy for
-    visualizing what's going on with the data. 
+    visualizing what's going on with the data.
     x= Value from sensor, mn= minimum plottable value,
     mx= maximum plottable value, w= width of plot in chars,
     c= the character to plot with.'''
@@ -120,7 +120,7 @@ class Client():
         self.sid= 'SCR'
         self.maxEpisodes=1 # "Maximum number of learning episodes to perform"
         self.trackname= 'unknown'
-        self.stage= 3 # 0=Warm-up, 1=Qualifying 2=Race, 3=unknown <Default=3> 
+        self.stage= 3 # 0=Warm-up, 1=Qualifying 2=Race, 3=unknown <Default=3>
         self.debug= False
         self.maxSteps= 100000  # 50steps/second
         self.pfilename= 'default_parameters'
@@ -225,7 +225,7 @@ class Client():
         sockdata= str()
         while True:
             try:
-                # Receive server data 
+                # Receive server data
                 sockdata,addr= self.so.recvfrom(1024)
             except socket.error, emsg:
                 print '.',
@@ -441,7 +441,7 @@ class DriverAction():
                     'gear':1,
                    'steer':0,
                    'focus':[-90,-45,0,45,90],
-                    'meta':0 
+                    'meta':0
                     }
 
     def clip_to_limits(self):
@@ -556,5 +556,6 @@ if __name__ == "__main__":
     for step in xrange(C.maxSteps,0,-1):
         C.get_servers_input()
         drive_example(C)
+        print(C.R.d)
         C.respond_to_server()
     C.shutdown()
