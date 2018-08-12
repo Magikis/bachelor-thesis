@@ -524,6 +524,7 @@ def learn_track_final(dfs):
     T.sectionList.append( TrackSection(secBegin,dfs, secMagnitude, secWidth, badness) )
 def drive(c,tick):
     S,R,P= c.S.d,c.R.d,c.P
+    print(P)
     global target_speed
     global lap
     global prev_distance_from_start

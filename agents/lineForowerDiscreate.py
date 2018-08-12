@@ -1,7 +1,4 @@
-from __future__ import print_function
-from snakeoil import Client
-import sys
-import json
+from collections import namedtuple
 
 responseAttr = ['accel',
                 'brake',
@@ -16,7 +13,7 @@ it = 0
 
 def drive(state):
     response = getDeafaultResponse(state)
-    print('anglel: ', state['angle'], 'trackPos: ', state['trackPos'])
+    # print('anglel: ', state['angle'], 'trackPos: ', state['trackPos'])
 
     goalSpeed = 150
     if abs(state['trackPos']) > 1:
@@ -26,15 +23,15 @@ def drive(state):
         response['accel'] = 0
     else:
         response['accel'] = 1
-
+    
     targetAngle = 0
     if state['trackPos'] > 0.01:
-        targetAngle = 0.1
+        targetAngle = 3
     if state['trackPos'] < -0.01:
-        targetAngle = -0.1
+        targetAngle = -3
 
-    if abs(state['angle'] - targetAngle) > 0.025:
-        turningForce = 0.4
+    if abs(state['angle'] - targetAngle) > 4:
+        turningForce = 0.3
         if state['angle'] < targetAngle:
             response['steer'] = -turningForce
         else:
@@ -66,20 +63,4 @@ def getDeafaultResponse(state):
     return response
 
 
-def drivingLoop(drivingFunc):
-    C = Client()
-    for step in range(C.maxSteps, 0, -1):
-        C.get_servers_input()
-        data = C.S.d
-        response = drivingFunc(data)
-        for k in C.R.d:
-            C.R.d[k] = response[k]
-        print(C.R.d)
-        sys.stdout.flush()
-        C.respond_to_server()
-    C.shutdown()
 
-
-# ================ MAIN ================
-if __name__ == "__main__":
-    drivingLoop(drive)
