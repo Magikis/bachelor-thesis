@@ -128,10 +128,11 @@ def bargraph(x, mn, mx, w, c='X'):
 
 class Client():
     def __init__(self, H=None, p=None, i=None, e=None,
-                 t=None, s=None, d=None, vision=False):
+                 t=None, s=None, d=None, vision=False, verbose=False):
         # If you don't like the option defaults,  change them here.
         self.vision = vision
 
+        self.verbose = verbose
         self.host = 'localhost'
         self.port = 3001
         self.sid = 'SCR'
@@ -187,8 +188,9 @@ class Client():
                 sockdata, addr = self.so.recvfrom(data_size)
                 sockdata = sockdata.decode('utf-8')
             except socket.error as emsg:
-                print("Waiting for server on %d............" % self.port)
-                print("Count Down : " + str(n_fail))
+                if self.verbose:
+                    print("Waiting for server on %d............" % self.port)
+                    print("Count Down : " + str(n_fail))
                 if n_fail < 0:
                     print("relaunch torcs")
                     os.system('pkill torcs')
@@ -206,7 +208,8 @@ class Client():
 
             identify = '***identified***'
             if identify in sockdata:
-                print("Client connected on %d.............." % self.port)
+                if self.verbose:
+                    print("Client connected on %d.............." % self.port)
                 break
 
     def parse_the_command_line(self):
@@ -268,9 +271,10 @@ class Client():
                 print("Client connected on %d.............." % self.port)
                 continue
             elif '***shutdown***' in sockdata:
-                print((("Server has stopped the race on %d. " +
-                        "You were in %d place.") %
-                       (self.port, self.S.d['racePos'])))
+                if self.verbose:
+                    print((("Server has stopped the race on %d. " +
+                            "You were in %d place.") %
+                           (self.port, self.S.d['racePos'])))
                 self.shutdown()
                 return
             elif '***restart***' in sockdata:
@@ -307,11 +311,13 @@ class Client():
     def shutdown(self):
         if not self.so:
             return
-        print(("Race terminated or %d steps elapsed. Shutting down %d."
-               % (self.maxSteps, self.port)))
+        if self.verbose:
+            print(("Race terminated or %d steps elapsed. Shutting down %d."
+                   % (self.maxSteps, self.port)))
         self.so.close()
         self.so = None
-        sys.exit() # No need for this really.
+        raise Exception('RACE_ENDED')
+        # sys.exit() # No need for this really.
 
 
 class ServerState():

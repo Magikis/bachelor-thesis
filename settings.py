@@ -1,5 +1,6 @@
 settings = {
     'track_length': 5784.02,
+    'speed_limits': [300.0, 160.703125, 300.0, 95.078125, 300.0, 103.28125, 103.28125, 44.6875, 40.0],
     'log_keys': [
         'angle',
         'curLapTime',

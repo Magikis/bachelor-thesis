@@ -1,10 +1,25 @@
+import numpy as np
 from collections import namedtuple
-from agents.lineForowerDiscreate import getDeafaultResponse
+
+import agents.utils as utils
+import agents.basicTransmission as basicTransmission
+from settings import settings
 
 
-def smartPrint(step, howOften, *args):
-    if step % howOften == 0:
-        print(args)
+def get_goal_speed(dist_from_start, speed_limits=None, **kwargs):
+    if speed_limits is None:
+        speed_limits = settings['speed_limits']
+
+    track_divison = np.linspace(
+        0.,
+        settings['track_length'],
+        len(speed_limits)
+    )
+
+    for i, intv in enumerate(zip(track_divison, track_divison[1:])):
+        if intv[0] <= dist_from_start < intv[1]:
+            return speed_limits[i]
+    return speed_limits[-1]
 
 
 def precisionMode(state, response):
@@ -15,15 +30,19 @@ def precisionMode(state, response):
         response['steer'] = turningForce
 
 
-def drive(state, step):
-    response = getDeafaultResponse(state)
+def drive(state, **kwargs):
+    response = utils.get_default_response()
     state = namedtuple('State', state.keys())(**state)
 
-    goalSpeed = 90
+    response['gear'] = basicTransmission.get_new_gear(state)
+    
+    goalSpeed = get_goal_speed(state.distFromStart, **kwargs)
     if abs(state.trackPos) > 1:
         goalSpeed = 20
 
     if state.speedX > goalSpeed:
+        if state.speedX > 5. + goalSpeed:
+            response['brake'] = 1
         response['accel'] = 0
     else:
         response['accel'] = 1
