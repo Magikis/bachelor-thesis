@@ -1,7 +1,9 @@
 from main import main
 import utils
 import subprocess
+import numpy as np
 import os
+import settings
 
 
 def run_practice(id, verbose=False, **kwargs):
@@ -16,7 +18,7 @@ def run_practice(id, verbose=False, **kwargs):
         torcs_instance = subprocess.Popen(
             [
                 'torcs',
-                '-r', f'{os.getcwd()}/tracks/forza_practice.xml',
+                '-r', f'{os.getcwd()}/tracks/{settings.track}_practice.xml',
             ],
             stdout=torcs_log
         )

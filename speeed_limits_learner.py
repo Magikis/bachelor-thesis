@@ -13,6 +13,7 @@ def bisect(f, a, times, alpha=150):
             res = mem[a + alpha]
         else:
             res = f(a + alpha)
+            mem[a + alpha] = res
         history.append((a + alpha, res))
         if res < F_a:
             a += alpha
@@ -20,7 +21,7 @@ def bisect(f, a, times, alpha=150):
             if a >= 300.:
                 return (300., history)
         else:
-            if alpha < 2.:
+            if alpha < 1.:
                 print(f'{i + 1} times')
                 return (a, history)
             alpha /= 2
@@ -29,7 +30,8 @@ def bisect(f, a, times, alpha=150):
 
 
 def main():
-    table = np.ones(9) * 40.
+    table = np.array([40.] * 8)
+    hist = []
     for i, x in enumerate(table):
         speed_limits = table.copy()
 
@@ -37,13 +39,17 @@ def main():
             id = utils.generate_id()
             speed_limits[i] = x
             runPractice.run_practice(id, speed_limits=speed_limits)
-            return utils.rate_race(id)
+            score = utils.rate_race(id)
+            print(f'Score: {score}, speed_limits: {speed_limits}, id: {id}')
+            return score
 
         values = bisect(f, x, 20, alpha=150)
         table[i] = values[0]
-        with open('logs/speed_limits.log', 'a') as f:
-            f.write(json.dumps(values))
+        hist.append(values)
     print('LEARNIG RESULT:', list(table))
+    with open('logs/speed_limits.log', 'w') as f:
+        f.write(json.dumps(hist))
+        # f.write('\n')
 
 
 if __name__ == "__main__":

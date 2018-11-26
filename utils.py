@@ -1,6 +1,7 @@
 import arrow
 import numpy as np
 import csv
+import json
 
 
 def generate_id():
@@ -17,8 +18,7 @@ def logfile_name_torcs(id):
 
 def parse_agent_logfile(id):
     with open(f'logs/{logfile_name_agent(id)}') as f:
-        reader = csv.DictReader(f)
-        return list(reader)
+        return json.loads(f.read())
 
 
 def race_first_lap_time(id):
@@ -34,17 +34,29 @@ def race_first_lap_time(id):
     return None
 
 
+def was_agent_late(id):
+    late_str = 'Timeout for client answer'
+    with open(f'logs/{logfile_name_torcs(id)}') as f:
+        return late_str in f.read()
+
+
 def was_on_track_all_the_time(id):
     log = parse_agent_logfile(id)
     trackPoses = np.array([x['trackPos'] for x in log], dtype='float')
-    return np.all(np.abs(trackPoses) <= 1.)
+    return np.all(np.abs(trackPoses) < 1.)
+
+
+class AgentWasLate(Exception):
+    pass
 
 
 def rate_race(id):
+    if was_agent_late(id):
+        raise AgentWasLate()
     lap_time = race_first_lap_time(id)
     if was_on_track_all_the_time(id) and lap_time is not None:
         return lap_time
     if lap_time is not None:
-        return lap_time + 10. ** 5
+        return np.inf
     else:
-        return 10. ** 6
+        return np.inf

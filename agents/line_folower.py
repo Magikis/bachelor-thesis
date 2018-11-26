@@ -6,59 +6,62 @@ import agents.basicTransmission as basicTransmission
 from settings import settings
 
 
-def get_goal_speed(dist_from_start, speed_limits=None, **kwargs):
-    if speed_limits is None:
-        speed_limits = settings['speed_limits']
+class Drive():
+    def __init__(self, speed_limits=settings['speed_limits'], **kwargs):
+        self.speed_limits = speed_limits
+        self.track_divison = track_divison = np.linspace(
+            0.,
+            settings['track_length'],
+            len(self.speed_limits) + 1
+        )
+        self.is_starting = True
+        self.transmission = basicTransmission.Transmssion()
 
-    track_divison = np.linspace(
-        0.,
-        settings['track_length'],
-        len(speed_limits)
-    )
+    def drive(self, state, **kwargs):
+        if self.is_starting:
+            if state['distFromStart'] < 20.:
+                self.is_starting = False
 
-    for i, intv in enumerate(zip(track_divison, track_divison[1:])):
-        if intv[0] <= dist_from_start < intv[1]:
-            return speed_limits[i]
-    return speed_limits[-1]
+        response = utils.get_default_response()
 
+        response['gear'] = self.transmission.get_new_gear(state)
 
-def precisionMode(state, response):
-    turningForce = abs(state.angle) * (1 / 45)
-    if state.angle < 0:
-        response['steer'] = -turningForce
-    else:
-        response['steer'] = turningForce
+        goalSpeed = self.get_goal_speed(state['distFromStart'], **kwargs)
+        if abs(state['trackPos']) > 1:
+            goalSpeed = 20
 
-
-def drive(state, **kwargs):
-    response = utils.get_default_response()
-    state = namedtuple('State', state.keys())(**state)
-
-    response['gear'] = basicTransmission.get_new_gear(state)
-    
-    goalSpeed = get_goal_speed(state.distFromStart, **kwargs)
-    if abs(state.trackPos) > 1:
-        goalSpeed = 20
-
-    if state.speedX > goalSpeed:
-        if state.speedX > 5. + goalSpeed:
-            response['brake'] = 1
-        response['accel'] = 0
-    else:
-        response['accel'] = 1
-
-    if abs(state.trackPos) < 0.2:
-        precisionMode(state, response)
-
-    else:
-        targetAngle = state.trackPos * 90
-        # turningForce = abs(state.angle - targetAngle) * (1 / 45) * 3
-        if state.angle < targetAngle:
-            response['steer'] = -0.4
+        if state['speedX'] > goalSpeed:
+            if state['speedX'] > 5. + goalSpeed:
+                response['brake'] = 1
+            response['accel'] = 0
         else:
-            response['steer'] = 0.4
+            response['accel'] = 1
 
-    # smartPrint('ANGLE: ', targetAngle)
-    # smartPrint('TRACK: ', turningForce)
-    # smartPrint(step, 100, state.distFromStart)
-    return response
+        if abs(state['trackPos']) < 0.2:
+            self.precisionMode(state, response)
+
+        else:
+            targetAngle = state['trackPos'] * 90
+            # turningForce = abs(state['angle'] - targetAngle) * (1 / 45) * 3
+            if state['angle'] < targetAngle:
+                response['steer'] = -settings['hard_turn']
+            else:
+                response['steer'] = settings['hard_turn']
+
+        return response
+
+    def get_goal_speed(self, dist_from_start, **kwargs):
+        if self.is_starting:
+            return 300.
+
+        for i, intv in enumerate(zip(self.track_divison, self.track_divison[1:])):
+            if intv[0] <= dist_from_start < intv[1]:
+                return self.speed_limits[i]
+        return self.speed_limits[-1]
+
+    def precisionMode(self, state, response):
+        turningForce = abs(state['angle']) * (1 / 45)
+        if state['angle'] < 0:
+            response['steer'] = -turningForce
+        else:
+            response['steer'] = turningForce
