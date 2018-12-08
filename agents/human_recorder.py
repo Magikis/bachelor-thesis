@@ -25,7 +25,7 @@ class HumanDrive():
             if human_state[k]:
                 self.hs_counter[k] += 1
             else:
-                self.hs_counter[k] = 0
+                self.hs_counter[k] = max(self.hs_counter[k] - 2, 0)
         if human_state['accel']:
             response['accel'] = 1
 
