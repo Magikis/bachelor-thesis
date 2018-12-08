@@ -15,7 +15,20 @@ settings = {
         'short': [159.53125, 154.84375, 160.703125, 153.671875],
         'track_2': [300.0, 132.578125, 123.203125, 107.3828125, 300.0, 199.375, 93.90625, 300.0],
     }[track],
-    'hard_turn': 0.35
+    'hard_turn': 0.35,
+    'action_keys': [
+        'accel',
+        'brake',
+        'steer',
+    ],
+    'state_keys': [
+        'speedX',
+        'speedY',
+        'angle',
+        'trackPos',
+        'distFromStart',
+        'track',
+    ],
 
 }
 
@@ -51,7 +64,7 @@ def gen_log_object(state, response):
         'accel': response['accel'],
         'brake': response['brake'],
         'clutch': response['clutch'],
-        'focus': response['focus'],
+        # 'focus': response['focus'],
         'gear': response['gear'],
         'meta': response['meta'],
         'steer': response['steer'],

@@ -6,6 +6,7 @@ import datetime
 from snakeoil.snakeoil import Client
 from settings import (settings, gen_log_object)
 import agents.line_folower as line_folower
+import agents.knn as knn_agent
 import utils
 import json
 import time
@@ -51,7 +52,8 @@ def drivingLoop(drivingClass, id, **kwargs):
 
 def main(id=None, **kwargs):
     drivingLoop(
-        line_folower.Drive(**kwargs),
+        # line_folower.Drive(**kwargs),
+        knn_agent.Knn_agent(),
         id if id else utils.generate_id(),
         **kwargs
     )
