@@ -1,3 +1,4 @@
+import argparse
 import arrow
 import numpy as np
 import csv
@@ -60,3 +61,17 @@ def rate_race(id):
         return np.inf
     else:
         return np.inf
+
+
+def activate_parser():
+    parser = argparse.ArgumentParser(description='Run driver for Torcs')
+    parser.add_argument(
+        'driver_type',
+        choices=['line-follower', 'tree'],
+        default='tree',
+        help='Choose agent for driving'
+    )
+    parser.add_argument(
+        '--model-path', '-m',
+    )
+    return vars(parser.parse_args())

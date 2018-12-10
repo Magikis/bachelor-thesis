@@ -29,6 +29,7 @@ def run_practice(id, verbose=False, **kwargs):
 
 
 if __name__ == "__main__":
+    args = utils.activate_parser()
     id = utils.generate_id()
-    run_practice(id, verbose=True)
+    run_practice(id, verbose=True, **args)
     print(f'Race rating: {utils.rate_race(id)}')

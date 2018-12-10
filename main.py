@@ -50,15 +50,25 @@ def drivingLoop(drivingClass, id, **kwargs):
     print(f'Longest time frame: {longets_time * 1000:.2f}ms')
 
 
-def main(id=None, **kwargs):
+def main(id=None, driver_type='line-follower', **kwargs):
+    if id is None:
+        id = utils.generate_id()
+
+    if driver_type == 'line-follower':
+        drive_fun = line_folower.Drive(**kwargs)
+    elif driver_type == 'tree':
+        drive_fun = knn_agent.Knn_agent(**kwargs)
+
     drivingLoop(
-        # line_folower.Drive(**kwargs),
-        knn_agent.Knn_agent(),
-        id if id else utils.generate_id(),
+        drive_fun,
+        id,
         **kwargs
     )
 
 
 # ================ MAIN ================
+
 if __name__ == "__main__":
-    main()
+    args = utils.activate_parser()
+    main(**args)
+    pass
