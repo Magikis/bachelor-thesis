@@ -24,10 +24,12 @@ settings = {
     'state_keys': [
         'speedX',
         'speedY',
+        'speedZ',
         'angle',
         'trackPos',
-        'distFromStart',
+        # 'distFromStart',
         'track',
+        'wheelSpinVel'
     ],
 
 }

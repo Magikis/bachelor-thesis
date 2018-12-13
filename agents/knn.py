@@ -11,9 +11,9 @@ import agents.basicTransmission as basicTransmission
 from settings import settings
 
 
-def parse_dataset():
+def parse_dataset(dataset_path='important_logs'):
     data = []
-    logs = glob.glob("important_logs/*.agent.log")
+    logs = glob.glob(f"{dataset_path}/*.agent.log")
     for l in logs:
         with open(l) as f:
             data += json.loads(f.read())
