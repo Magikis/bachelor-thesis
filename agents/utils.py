@@ -1,6 +1,3 @@
-import pynput
-
-
 def get_default_response():
     response = {
         'gear': 1,
@@ -16,6 +13,7 @@ def get_default_response():
 
 class HumanInput():
     def __init__(self, verbose=True):
+        import pynput
         self.state = {k: False for k in self.cmds.values()}
         self.listener = pynput.keyboard.Listener(
             on_press=self.on_press,
