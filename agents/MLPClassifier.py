@@ -1,15 +1,20 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+
+from settings import settings
+from agents.knn import *
+import agents.basicTransmission as basicTransmission
+import agents.utils as utils
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from keras.models import load_model
+import tensorflow as tf
 import numpy as np
 import glob
 import json
 import joblib
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-
-import agents.utils as utils
-import agents.basicTransmission as basicTransmission
-from agents.knn import *
-from settings import settings
 
 
 class MLPClassifier_agent():
@@ -30,7 +35,7 @@ class MLPClassifier_agent():
         state_normed = self.scaler.transform([prepared_state])
 
         predicted_action = self.actions[
-            self.classifier.predict([state_normed])[0]
+            self.classifier.predict_classes(state_normed)[0]
         ]
 
         return {**response, **predicted_action}
@@ -40,9 +45,9 @@ class MLPClassifier_agent():
         arrs = np.load(f'{path}/parameters.npz')
         self.actions = arrs['actions']
         self.state_keys = arrs['state_keys']
-        self.classifier = joblib.load(f'{path}/classifier')
+        self.classifier = load_model(f'{path}/classifier')
         self.scaler = joblib.load(f'{path}/scaler')
-
+        # self.reduce_actions = arrs['reduce_actions']
     # def dump(self):
     #     path = 'saved_model'
     #     print(f'Dumping model to: {path}')
@@ -56,4 +61,3 @@ class MLPClassifier_agent():
     #         }
     #     )
     #     joblib.dump(self.knn, 'saved_model/model')
-
