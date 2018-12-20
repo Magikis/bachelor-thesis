@@ -3,5 +3,5 @@
 *.fls
 *.log
 *.out
-*.sunctex.gz
+*.synctex.gz
 *.toc
