@@ -9,8 +9,8 @@ import agents.utils as utils
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from keras.models import load_model
-import tensorflow as tf
+# from keras.models import load_model
+# import tensorflow as tf
 import numpy as np
 import glob
 import json
@@ -40,13 +40,13 @@ class MLPClassifier_agent():
 
         return {**response, **predicted_action}
 
-    def load(self, path):
-        print('Loading model')
-        arrs = np.load(f'{path}/parameters.npz')
-        self.actions = arrs['actions']
-        self.state_keys = arrs['state_keys']
-        self.classifier = load_model(f'{path}/classifier')
-        self.scaler = joblib.load(f'{path}/scaler')
+    # def load(self, path):
+    #     print('Loading model')
+    #     arrs = np.load(f'{path}/parameters.npz')
+    #     self.actions = arrs['actions']
+    #     self.state_keys = arrs['state_keys']
+    #     self.classifier = load_model(f'{path}/classifier')
+    #     self.scaler = joblib.load(f'{path}/scaler')
         # self.reduce_actions = arrs['reduce_actions']
     # def dump(self):
     #     path = 'saved_model'

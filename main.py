@@ -7,6 +7,7 @@ from snakeoil.snakeoil import Client
 from settings import (settings, gen_log_object)
 import agents.line_folower as line_folower
 import agents.knn as knn_agent
+from agents.double_model_agent import DoubleModelAgent
 from agents.MLPClassifier import MLPClassifier_agent
 import utils
 import json
@@ -61,6 +62,8 @@ def main(id=None, driver_type='line-follower', **kwargs):
         drive_fun = knn_agent.Knn_agent(**kwargs)
     elif driver_type == 'mlp':
         drive_fun = MLPClassifier_agent(**kwargs)
+    elif driver_type == 'dma':
+        drive_fun = DoubleModelAgent(**kwargs)
 
     drivingLoop(
         drive_fun,
