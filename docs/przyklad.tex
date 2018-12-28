@@ -20,12 +20,13 @@
     hyperref,
     array,
     longtable,
-    wrapfig
-    % amsmath,
+    wrapfig,
+    amsmath,
+    algorithmic
     % amssymb,
     % amsthm,
     % amsfonts,
-    % tikz
+    % tikz 
 }
 %%%%% Definitions and commands
 %
@@ -94,13 +95,127 @@ Organizers provided "clients" programmes only in Java and C++. I didn't want to 
 
 
 
-\chapter{Experiments}
+\chapter{Standard programing approach}
 
 \section{Line follower}
 
-The first approach to the problem was developing simple bot which follows the middle line of the track. It uses following parameters: PosTrack. angle, sppedX
+The first approach to the problem was developing simple bot which follows the track axis. Every time, absolute value of trackPos sensor (normalized position of the car on the track between $[-1, +1]$) is bigger than given small threshold, agent turns towards axis of the track with turning force set to 35\%. To avoid zigzag driving, very small course corrections are applied, whenever $abs(trackPos) < 0.2$. Speed is limited to 80 km/h. These configuration allows bot to safely drive on every track. 
 
-\chapter{Adidtonal Problems}
+I am aware that limiting turing force, has huge negative impact on bot performance. However increasing that value leads to dangerous behaviors. I was surprised how easy it is to slip. During development line follower I haven't found any solution for getting out of the slip. For now limiting that value was necessary.
+
+\section{Speed limit signs}
+
+In real world, government for safety reasons, places speed limit sign on dangerous sectors of roads. Signs are placed before sharp turns, steep slopes, bridges, viaducts, and more. Drivers adjust the speed to specific environment conditions. Inspired by this observation, I tried to improve previous agent iteration. 
+
+I've split the track on 8 sections, using distFromStart sensor (distance of the car from the start line along the track line). Every part would have different speed limit set for specific track. The goal is to finish the lap as fast as we can while not falling out of the track. So we need to minimize function $f$, where $l_i$ - speed limit for section $i$ in km/h.
+
+$$ f(l_1, l_2, \dots, l_n ) =  \begin{cases}
+    \infty &\quad , \text{when the car fell off the track}\\
+    \text{lap\_time}  &\quad , \text{otherwise} \\
+  \end{cases}
+ $$
+
+I was trying to implement genetic algorithm for finding optimal limits for given track, but it appears that game engine, even with turned graphics off, isn't as fast as I anticipated. It takes almost 20 seconds, to complete one lap. Simple genetic algorithm would need long hours to find approximately good solution. I've used two following observations while developing my algorithm.
+
+\begin{itemize}
+    \item  $l_i \in [40, 300]$:  Smaller values can lead to disqualification from race.
+    \item  true speed of car on sction $i$, depends on $l_i$ and true speed at the end of section $i-1$
+    \item
+    $l_i$ is correct, when $l_{i+1} = 40$ and car didn't fell out from track
+    \item  $g_j(x) = f(l_1,l_2, \dots,l_{j-1}, x, l_{j+1}, \dots, l_n)$ is decreasing while car stays on the track
+    
+\end{itemize}
+
+
+I've implemented algorithm based on divide and conquer idea. It finds maximal x, where $g(x) \neq \infty$. We run that procedure on every argument:
+
+\begin{algorithmic}
+    \STATE $l_i\gets 40$
+    \FOR{$i\gets 1,\dots, n$}
+        \STATE $l_i = devide\_and\_conquer(func=g_i, min=40, max=300)$
+    \ENDFOR
+\end{algorithmic}
+
+For every section it uses around 12 game engine runs. So whole algorithm ends execution after around half an hour.
+
+\section{Results and observations}
+
+In following table I've presented line-follower performance on specific tracks from TORCS environment. While speed limits are significant improvement, they still do not deal with major flaw of the concept. Our bot is extremely reactive. Human driver see a turn from distance and prepares for it (reduces speed, drifts towards opposite side of the road). On the other hand my bot turns the steering wheel only when it drifts away from the middle of the track (this happens after entering the turn). It is basically to late for a perfect turning maneuver. We need a model, which predicts and reacts to the  future events. That's why I resign from extending current concept.
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|}
+          \hline
+          track name & line-follower [s] & with speed limits [s] \\
+          \hline
+          forza & $265.51$ & $146.31$  \\
+          \hline
+          cg\_track\_2 & $148.84$ &  $84.68$\\
+          \hline
+          cg\_track\_3 & $133.74$ & $91.86$ \\
+          \hline
+        \end{tabular}
+        \caption{Line follower performance for specific TORCS tracks}
+        \label{tab:line_follower}
+
+\end{table}
+
+\chapter{Machine Learning Approach}
+
+\section{Collecting the data}
+
+Machine learning is well known 
+
+Unfortunately TORCS environment does not have an option to log sensors data and driver actions. It is planned to add this functionality in the future development. That's why I developed software which mimics TORCS car controls and saves data from all sensors and driver actions to json file. From game perspective it is normal agent, but it reacts only on user keyboard inputs (accelerate, break, left, right).  With that infrastructure I was able to record some well-driven race laps on various tracks.  
+
+\section{Single Classifier}
+
+During 10 recording laps on \textit{cg\_track\_2} I've collected around 30000 data frames. The state passed to classifier is made up of following sensors:
+
+\paragraph{State parameters}
+\begin{itemize}
+    \item \textbf{speeds} (values in three dimensions)
+    \item \textbf{angle}, \textbf{trackPos} (same as in line-follower) 
+    \item \textbf{track}  (19 sensors in front of the car measuring distances to edge of track) 
+    \item \textbf{distFromStart} (distance of the car from the start line along the track line
+\end{itemize}
+
+All values are normalized between $[-1,1]$ and combined in a single vector. For actions I've created a list of unique actions present in data set and labeled them. 
+
+\paragraph{Action parameters}
+\begin{itemize}
+    \item \textbf{accel} $\in \{0,1\}$
+    \item \textbf{brake} $\in \{0,1\}$ 
+    \item \textbf{steer} $\in [-1,1]$
+\end{itemize}
+
+Classifier for state vector, should answer with label of which action are we supposed to execute. First and actually only successful approach was  simple decision tree classifier from scikit-learn library (implementation of CART algorithm).  Results are shown in table \ref{tab:single_clp_tree}. Improvement around 20\% was a good result. 
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|}
+          \hline
+          track name & line-follower with limts [s] & single decision tree classifier [s] \\
+          \hline
+          cg\_track\_2 & $84.68$ & $61.18$ \\
+          \hline
+        \end{tabular}
+        \caption{Single Classifier: decision tree performance}
+        \label{tab:single_clp_tree}
+
+\end{table}
+
+
+
+
+
+
+
+
+
+    \chapter{Adidtonal Problems}
 
 \begin{itemize}
     \item \textbf{Transmission} Choosen architecture didn't allowed me to use automatic transmission included with the torcs game. I had to build my own basic automatic transmission system, which is far from perfect. I haven't change it during development of different agents, so all results are comparable. 

@@ -72,6 +72,12 @@ def activate_parser():
         help='Choose agent for driving'
     )
     parser.add_argument(
+        '--track'
+    )
+    # parser.add_argument(
+    #     '--'
+    # )
+    parser.add_argument(
         '--model-path', '-m',
     )
     return vars(parser.parse_args())

@@ -6,7 +6,12 @@ import os
 import settings
 
 
-def run_practice(id, verbose=False, **kwargs):
+def run_practice(
+    id,
+    verbose=False,
+    track=settings.track,
+    **kwargs
+):
     if verbose:
         print(f'Id of run: {id}')
     subprocess.run([
@@ -18,7 +23,7 @@ def run_practice(id, verbose=False, **kwargs):
         torcs_instance = subprocess.Popen(
             [
                 'torcs',
-                '-r', f'{os.getcwd()}/tracks/{settings.track}_practice.xml',
+                '-r', f'{os.getcwd()}/tracks/{track}.xml',
             ],
             stdout=torcs_log
         )
