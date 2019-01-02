@@ -35,7 +35,7 @@ class DoubleModelAgent():
         steer_val = self.steer_regressor.predict(
             state_vector
         )[0]
-        
+
         state_vector = np.hstack((state_vector, [[steer_val]]))
 
         speed_action_index = self.speed_classifier.predict(
@@ -48,6 +48,16 @@ class DoubleModelAgent():
             **self.speed_actions_labels[speed_action_index],
         }
 
+    isStart = True
+
+    def manage_start_accel(self, state, response):
+        if self.isStart:
+            if state['distFromStart'] > 1 and state['speedX'] < 50:
+                response['accel'] = 1
+                response['brake'] = 0
+            else:
+                self.isStart = False
+
     def load(self, path):
         print('Loading model')
         arrs = np.load(f'{path}/parameters.npz')
@@ -56,3 +66,60 @@ class DoubleModelAgent():
         self.speed_classifier = joblib.load(f'{path}/speed_classifier')
         self.steer_regressor = joblib.load(f'{path}/steer_regressor')
         self.scaler = joblib.load(f'{path}/scaler')
+
+
+class DoubleModelAgentWithStatesHistory(DoubleModelAgent):
+    states_history = []
+
+    def drive(self, state, **kwargs):
+        response = utils.get_default_response()
+
+        response['gear'] = self.transmission.get_new_gear(state)
+
+        extracted_state = extract_state(state, self.state_keys)
+        if len(self.states_history) == 0:
+            self.states_history.append(
+                np.concatenate((
+                    extracted_state,
+                    (0, 0)
+                ))
+            )
+
+        regressor_input = self.scaler.transform(
+            [
+                np.concatenate((
+                    extracted_state,
+                    self.states_history[-1]
+                ))
+            ]
+        )
+
+        steer_val = self.steer_regressor.predict(
+            regressor_input
+        )[0]
+
+        classifier_input = np.concatenate((
+            regressor_input[0],
+            [steer_val]
+        ))
+
+        speed_action_index = self.speed_classifier.predict(
+            [classifier_input]
+        )[0]
+
+        self.states_history.append(
+            np.array([
+                *extracted_state,
+                steer_val,
+                speed_action_index,
+            ])
+        )
+
+        total_response = {
+            **response,
+            'steer': steer_val,
+            **self.speed_actions_labels[speed_action_index],
+        }
+
+        self.manage_start_accel(state, total_response)
+        return total_response
