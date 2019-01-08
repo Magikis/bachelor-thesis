@@ -29,7 +29,7 @@ def bisect(f, a, times, alpha=150):
     return (a, history)
 
 
-def main():
+def main(**args):
     table = np.array([40.] * 8)
     hist = []
     for i, x in enumerate(table):
@@ -38,7 +38,7 @@ def main():
         def f(x):
             id = utils.generate_id()
             speed_limits[i] = x
-            runPractice.run_practice(id, speed_limits=speed_limits)
+            runPractice.run_practice(id, speed_limits=speed_limits, **args)
             score = utils.rate_race(id)
             print(f'Score: {score}, speed_limits: {speed_limits}, id: {id}')
             return score
@@ -53,4 +53,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = utils.activate_parser()
+    main(**args)

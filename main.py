@@ -11,6 +11,9 @@ from agents.double_model_agent import (
     DoubleModelAgent,
     DoubleModelAgentWithStatesHistory
 )
+from agents.triple_model_agent import (
+    TripleModelAgent
+)
 from agents.single_model_agent import SingleModelAgent
 from agents.MLPClassifier import MLPClassifier_agent
 import utils
@@ -72,6 +75,8 @@ def main(id=None, driver_type='line-follower', **kwargs):
         drive_fun = DoubleModelAgent(**kwargs)
     elif driver_type == 'dma-sh':
         drive_fun = DoubleModelAgentWithStatesHistory(**kwargs)
+    elif driver_type == 'tma':
+        drive_fun = TripleModelAgent(**kwargs)
 
     drivingLoop(
         drive_fun,

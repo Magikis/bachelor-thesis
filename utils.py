@@ -55,6 +55,7 @@ def rate_race(id):
     if was_agent_late(id):
         raise AgentWasLate()
     lap_time = race_first_lap_time(id)
+    print(lap_time)
     if was_on_track_all_the_time(id) and lap_time is not None:
         return lap_time
     if lap_time is not None:
@@ -67,7 +68,7 @@ def activate_parser():
     parser = argparse.ArgumentParser(description='Run driver for Torcs')
     parser.add_argument(
         'driver_type',
-        choices=['line-follower', 'tree', 'mlp', 'dma', 'dma-sh', 'sma'],
+        choices=['line-follower', 'tree', 'mlp', 'dma', 'dma-sh', 'sma', 'tma'],
         default='tree',
         help='Choose agent for driving'
     )

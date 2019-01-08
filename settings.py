@@ -2,9 +2,14 @@ track = (
     # 'forza'
     # 'e_track_5'
     # 'cg_track_2'
-    'cg_track_3'
-    # 'const'
+    # 'cg_track_3'
+    'const'
 )
+
+
+def get_track():
+    return track
+
 
 settings = {
     'track_length': {

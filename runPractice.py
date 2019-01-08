@@ -9,7 +9,7 @@ import settings
 def run_practice(
     id,
     verbose=False,
-    track=settings.track,
+    track=settings.get_track(),
     **kwargs
 ):
     if verbose:
@@ -23,6 +23,7 @@ def run_practice(
         torcs_instance = subprocess.Popen(
             [
                 'torcs',
+                '-t', '100000',
                 '-r', f'{os.getcwd()}/tracks/{track}.xml',
             ],
             stdout=torcs_log
