@@ -11,9 +11,13 @@ import agents.basicTransmission as basicTransmission
 from settings import settings
 
 
-def parse_dataset(dataset_path='important_logs'):
+def parse_dataset(dataset_path='important_logs', files_limit=None):
     data = []
     logs = glob.glob(f"{dataset_path}/*.agent.log")
+
+    if files_limit is not None:
+        logs = logs[:files_limit]
+
     for l in logs:
         with open(l) as f:
             data += json.loads(f.read())
@@ -45,8 +49,8 @@ def extract_parameters(
             {k: x[k] for k in state_keys}
         )
         for x in data
-        if np.all(np.array(x['track']) >= 0)
-        if not (x['speedX'] == 0 and x['accel'] == 0)
+        # if np.all(np.array(x['track']) >= 0)
+        # if not (x['speedX'] == 0 and x['accel'] == 0)
     ]
     actions, states = zip(*processed)
     return list(map(state_to_vector, states)),  actions
@@ -68,7 +72,7 @@ class Knn_agent():
     knn = DecisionTreeClassifier()
     # knn = RandomForestClassifier(50)
 
-    def __init__(self, model_path=None, dump_after=True):
+    def __init__(self, model_path=None, dump_after=True, **kwargs):
         self.transmission = basicTransmission.Transmssion()
 
         if model_path is None:

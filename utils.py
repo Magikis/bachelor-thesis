@@ -67,7 +67,7 @@ def activate_parser():
     parser = argparse.ArgumentParser(description='Run driver for Torcs')
     parser.add_argument(
         'driver_type',
-        choices=['line-follower', 'tree', 'mlp', 'dma', 'dma-sh'],
+        choices=['line-follower', 'tree', 'mlp', 'dma', 'dma-sh', 'sma'],
         default='tree',
         help='Choose agent for driving'
     )

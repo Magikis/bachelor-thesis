@@ -11,6 +11,7 @@ from agents.double_model_agent import (
     DoubleModelAgent,
     DoubleModelAgentWithStatesHistory
 )
+from agents.single_model_agent import SingleModelAgent
 from agents.MLPClassifier import MLPClassifier_agent
 import utils
 import json
@@ -65,6 +66,8 @@ def main(id=None, driver_type='line-follower', **kwargs):
         drive_fun = knn_agent.Knn_agent(**kwargs)
     elif driver_type == 'mlp':
         drive_fun = MLPClassifier_agent(**kwargs)
+    elif driver_type == 'sma':
+        drive_fun = SingleModelAgent(**kwargs)
     elif driver_type == 'dma':
         drive_fun = DoubleModelAgent(**kwargs)
     elif driver_type == 'dma-sh':
