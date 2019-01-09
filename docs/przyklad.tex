@@ -59,7 +59,7 @@ That's why companies around the globe put a lot of effort into making the car so
     \caption{Screen shot from TORCS race \cite{TORCS}}
     \label{fig:torcs}
 \end{figure}
-I have much more experience with programing in high level languages, so clean TORCS environment did not meet all my expectations. 
+I have much more experience with programming in high level languages, so clean TORCS environment did not meet all my expectations. 
 
 
 \section{Simulated Car Racing Championship}
@@ -89,13 +89,11 @@ Server provides very accurate description of virtual environment state. All para
      \hline
      curLapTime & $[0, +\infty)$ (s) & Time elapsed during current lap. \\
      \hline
-     damage & $(0, +\infty)$ (point) & Current damage of the car (the higher is the value the higher is the damage). \\
+     damage & $(0, +\infty)$ (point) & Current damage of the car. \\
      \hline
      distFromStart & $[0, +\infty)$ (m) & Distance of the car from the start line along the track line. \\
      \hline
      distRaced & $[0, +\infty)$ (m) & Distance covered by the car from the beginning of the race \\
-     \hline
-     focus & $[0, 200]$ (m) & Vector of 5 range finder sensors: each sensor returns the distance between the track edge and the car within a range of 200 meters. When noisy option is enabled (see Section 7) sensors are affected by i.i.d. normal noises with a standard deviation equal to the $1\%$ of sensors range. The sensors sample, with a resolution of one degree, a five degree space along a specific direction provided by the client (the direction is defined with the focus command and must be in the range $[-90,+90]$ degrees w.r.t. the car axis). Focus sensors are not always available: they can be used only once per second of simulated time. When the car is outside of the track (i.e., pos is less than $-1$ or greater than $1$), the focus direction is outside the allowed range ($[-90,+90]$ degrees) or the sensors has been already used once in the last second, the returned values are not reliable (typically $-1$ is returned). \\
      \hline
      fuel & $[0, +\infty)$ (l) & Current fuel level. \\
      \hline
@@ -103,7 +101,7 @@ Server provides very accurate description of virtual environment state. All para
      \hline
      lastLapTime & $[0, +\infty)$ (s) & Time to complete the last lap \\
      \hline
-     opponents & $[0, 200]$ (m) & Vector of 36 opponent sensors: each sensor covers a span of 10 degrees within a range of 200 meters and returns the distance of the closest opponent in the covered area. When noisy option is enabled, sensors are affected by i.i.d. normal noises with a standard deviation equal to the $2\%$ of sensors range. The 36 sensors cover all the space around the car, spanning clockwise from $-180$ degrees up to $+180$ degrees with respect to the car axis. \\
+     opponents & $[0, 200]$ (m) & Vector of 36 opponent sensors: each sensor covers a span of 10 degrees within a range of 200 meters and returns the distance of the closest opponent in the covered area. \\
      \hline
      racePos & $\{1,2,\dots,N\}$ & Position in the race with respect to other cars. \\
      \hline
@@ -154,7 +152,7 @@ Server provides very accurate description of virtual environment state. All para
     \end{longtable}
 \end{center}
 
-\chapter{Standard programing approach}
+\chapter{Standard programming approach}
 
 \section{Line follower}
 
@@ -169,8 +167,8 @@ In real world, government for safety reasons, places speed limit sign on dangero
 I've split the track on 8 sections, using distFromStart sensor (distance of the car from the start line along the track line). Every part would have different speed limit set for specific track. The goal is to finish the lap as fast as we can while not falling out of the track. So we need to minimize function $f$, where $l_i$ - speed limit for section $i$ in km/h.
 
 $$ f(l_1, l_2, \dots, l_n ) =  \begin{cases}
-    \infty &\quad , \text{when the car fell off the track}\\
-    \text{lap\_time}  &\quad , \text{otherwise} \\
+    \infty, &\quad \text{when the car fell off the track}\\
+    \text{lap\_time}, &\quad \text{otherwise} \\
   \end{cases}
  $$
 
@@ -204,15 +202,15 @@ In following table I've presented line-follower performance on specific tracks f
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{ |c|c|c|}
+    \begin{tabular}{ |c|c|c|c|}
           \hline
-          track name & line-follower [s] & with speed limits [s] \\
+          track name & unexperienced driver[s] & line-follower[s] & speed limits[s]  \\
           \hline
-          forza & $265.51$ & $146.31$  \\
+          forza &  $122.65$ & $265.51$ & $146.31$   \\
           \hline
-          cg\_track\_2 & $148.84$ &  $84.68$\\
+          cg\_track\_2 & $79.64$ & $148.84$ &  $84.68$  \\ 
           \hline
-          cg\_track\_3 & $133.74$ & $91.86$ \\
+          cg\_track\_3 & $102.09$ & $133.74$ & $91.86$   \\
           \hline
         \end{tabular}
         \caption{Line follower performance for specific TORCS tracks}
