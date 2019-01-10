@@ -29,7 +29,7 @@ class TripleModelAgent(DoubleModelAgent):
     def load(self, path, **kwargs):
         super().load(path)
         self.steer_classifier = joblib.load(f'{path}/steer_classifier')
-        self.sl_agent = Drive(**kwargs) 
+        self.sl_agent = Drive(**kwargs)
 
     def drive(self, state, **kwargs):
         response = utils.get_default_response()
@@ -74,9 +74,19 @@ class TripleModelAgent(DoubleModelAgent):
             **self.speed_actions_labels[speed_action_index],
         }
 
-        self.apply_speed_limit(state, response)
-
+        # self.apply_speed_limit(state, response)
+        # self.manage_start_accel(state, response)
         return response
+
+    isStart = True
+
+    def manage_start_accel(self, state, response):
+        if self.isStart:
+            if state['distFromStart'] > 1 and state['speedX'] < 50:
+                response['accel'] = 1
+                response['brake'] = 0
+            else:
+                self.isStart = False
 
     def apply_speed_limit(self, state, response, goalSpeed=135):
         resp = self.sl_agent.drive(state)
