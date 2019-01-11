@@ -220,15 +220,33 @@ In following table I've presented line-follower performance on specific tracks f
 
 \chapter{Machine Learning Approach}
 
-\section{Collecting the data}
+\section{Introduction}
 
-Machine learning is well known 
 
-Unfortunately TORCS environment does not have an option to log sensors data and driver actions. It is planned to add this functionality in the future development. That's why I developed software which mimics TORCS car controls and saves data from all sensors and driver actions to json file. From game perspective it is normal agent, but it reacts only on user keyboard inputs (accelerate, break, left, right).  With that infrastructure I was able to record some well-driven race laps on various tracks.  
+For very complex tasks creating an algorithm can be very challenging.
+ Most of the time we have an input, we define requirements and develop an algorithm which solves our problem. But sometimes the task is to complex to be solved by an algorithm. In that case programmes can use machine learning. For example let's take email spam detection. Users get a lot off unwanted messages on their emails, most of the time they delete just them and that's a great thing. They unconsciously provide a labeled data sets, on which we can test our solution. Creating algorithm which predicts if a message is spam is extremely difficult. We can check for existence of specific keywords, measure length, check upper case letters appearance, but combining all this variables needs a lot of testing.
 
-\section{Single Classifier}
+ Instead of that, we can try to extract statistical relations in collected data. Machine learning algorithms can be applied when we have algorithm input and expected output for every example in the data, but we have no idea how it should be achived. We receive not optimal, but approximately good solution for our problem and that's exactly what we want from spam detector. It should help users in omitting unwanted messages, but it's not a problem if he is wrong.
 
-During 10 recording laps on \textit{cg\_track\_2} I've collected around 30000 data frames. The state passed to classifier is made up of following sensors:
+ Primary machine learning problem is classification. We want to assign every input to one of given classes. In our email example we've got two classes (SPAM, NOT-SPAM), but we can have much more of it. Model designed to solve that type of problems is called classifier. Quality of classifier can be measured by percentage of correctly predicted classes on the test data sets.
+
+ Problems where output is a single floating point number are called regression. Model which predicts price of car is much more useful thant one which assigns car to one of following classes  (cheap, medium, expensive). Such models are called regressors and we can measure their quality by counting mean squared error between real and predicted values on the test data set.
+
+
+\section{Applying machine learning for car driving agent}
+
+Accuracy of machine learning models depends heavily on amount of collected data. Trains data set should describe whole space of problem variables. With plenty of data samples we can extract most meaningful dependencies and predict outputs on real life data samples. 
+
+Although  !!!!!INSERT REFERANCE!!!! we can see some success with learning car driving model on quite small data set. I don't have access to huge database of car driving logs, but during agents development I became well TORCS driver. So I decided to record my performance on race tracks.
+
+Unfortunately TORCS environment does not have an option to log sensors data and driver actions. It is planned to add this functionality in the future development. That's why I developed software which mimics TORCS car controls and saves data from all sensors and driver actions to json file. From game perspective it is normal agent, but it reacts only on user keyboard inputs (accelerate, break, left, right).  With that infrastructure During 25 recording laps on \textit{cg\_track\_2}, I've collected around 55000 data frames (description of car state and driver action, saved every 10ms).
+
+\section{Single model agent}
+
+
+
+
+During 25 recording laps on \textit{cg\_track\_2} I've collected around 55000 data frames (description of environment state and driver action every 10ms). The state passed to classifier is made up of following sensors:
 
 \paragraph{State parameters}
 \begin{itemize}
@@ -292,6 +310,8 @@ Major flaw for previous classifier was tha amount of possible answers. To reduce
 \bibitem{scrc_manual} Daniele Loiacono, Luigi Cardamone, Pier Luca Lanzi, “Simulated Car
 Racing Championship: Competition Software Manual”, Technical Report 2011.06, Dipartimento
 di Elettronica e Informazione, Politecnico di Milano, Italy, 2011.
+\bibitem{Introduction_ML} Introduction to Machine Learning
+
 \end{thebibliography}
 
 
