@@ -224,7 +224,7 @@ In following table I've presented line-follower performance on specific tracks f
 
 
 For very complex tasks creating an algorithm can be very challenging.
- Most of the time we have an input, we define requirements and develop an algorithm which solves our problem. But sometimes the task is to complex to be solved by an algorithm. In that case programmes can use machine learning. For example let's take email spam detection. Users get a lot off unwanted messages on their emails, most of the time they delete just them and that's a great thing. They unconsciously provide a labeled data sets, on which we can test our solution. Creating algorithm which predicts if a message is spam is extremely difficult. We can check for existence of specific keywords, measure length, check upper case letters appearance, but combining all this variables needs a lot of testing.
+ Most of the time we have an input, we define requirements and develop an algorithm which solves our problem. But sometimes the task is to complex to be solved by an algorithm designed by human. In that case programmes can use machine learning. For example let's take email spam detection. Users get a lot off unwanted messages on their emails, most of the time they delete just them and that's a great thing. They unconsciously provide a labeled data sets, on which we can test our solution. Creating algorithm which predicts if a message is spam is extremely difficult. We can check for existence of specific keywords, measure length, check upper case letters appearance, but combining all this variables needs a lot of testing.
 
  Instead of that, we can try to extract statistical relations in collected data. Machine learning algorithms can be applied when we have algorithm input and expected output for every example in the data, but we have no idea how it should be achived. We receive not optimal, but approximately good solution for our problem and that's exactly what we want from spam detector. It should help users in omitting unwanted messages, but it's not a problem if he is wrong.
 
@@ -255,7 +255,7 @@ First machine learning approach was to develop simple model which predicts actio
 After splitting the data on train and test data set, I've trained classifiers to predict the best action for current car situation. I've used algorithms implemented scikit-learn \cite{scikit_learn} library. Results of experiments are shown in table \ref{tab:single_clp_tree}
 
 
-I've started with simple Decision Tree. CART (classification and regression tree) algorithm produces binary tree which consist of decision nodes and terminal leafs. Every node holds a binary condition (for example $\textit{angle} > 0.37$) which passes data frame to one of it's children. Every leaf is labeled by class which it represents. To classify specific input we traverse a path directed by decision nodes. To choose variable and value used in condition creation we are minimizing impurity function. More detailed description can be found in \cite{Introduction_ML}.
+I've started with simple Decision Tree classifier. CART (classification and regression tree) algorithm produces binary tree which consist of decision nodes and terminal leafs. Every node holds a binary condition (for example $\textit{angle} > 0.37$) which passes data frame to one of it's children. Every leaf is labeled by class which it represents. To classify specific input we traverse a path directed by decision nodes. To choose variable and value used in condition creation we are minimizing impurity function. More detailed description can be found in \cite{Introduction_ML}.
 
 Second model used was Random Forest. It is based on multiple randomized decision trees. Final result is determined by averaging predictions of every tree included in the model. 
 
@@ -287,12 +287,15 @@ It is worth noticing, that using \textbf{distFromStart} (distance from start lin
 
 \section{Two models agent}
 
-Major flaw for previous one model agent was tha amount of classes used in classification. Data set is to small for such variety of decisions. To simplify classification task I've decided to use two separate models: 
+Major flaw for previous one model agent was tha amount of classes used in classification. Data set is too small for such variety of decisions. To simplify classification task I've decided to use two separate models: 
 
 \begin{itemize}
     \item \textbf{Steer Regressor} - responsible for determining the turn rate (floating number between [-1,1]).
     \item \textbf{Acceleration Classifier} - responsibrle for choosing one of three speed actions \{accelerate, do\_nothing, brake\}
 \end{itemize}
+
+State vector for regressor is the same as on used in single model approach. Classifier input is expanded by \textbf{steer} value predicted by the regressor. Intuition behind passing value between two models is that, breaking and accelerating during turning the manoeuver, leads to dangerous behaviors. Humans tends to reduce the car speed before beginning of the turn. Acceleration classifier should depend on expected steering decision.
+
 
 This time I've used MLP (Multi Layer Perceptron) implemented in scikit-lirary \cite{scikit_learn}. It is simple neural network model which need more time to train, but is much more powerful than simple decision trees. 
 !!! DWSCRIBE NEURAL NETS!!!
@@ -313,7 +316,19 @@ Secondly with steer parameter determined by classifier we encounter following pr
 
 For classification problem both predictions (a and b) are equally wrong.  The class prediction is just missed. However for reconstructing steering actions case b) is much worse and more dangerous than a). When we are near edge of the track, that kind of wrong prediction can lead as away from the track resulting in a crash. When we approach setting \textit{steer} as regression problem we tends to choose values which are close to real ones. Regressor more accurately reflects steering actions which appears in the data set.
 
+\subsection{Results}
 
+
+All models trained on \textit{cg\_track\_2} data failed to stay on track for the whole race. Without
+
+
+!!!! Paagraph about prev state !!!!
+
+One of ideas to improve these agent, was assumption that, maybe planning driving policy is impossible with only one data frame processed at once. To take into account longer period of time, agent remembers state and action from previous.
+
+!!!END OF THA PARAGRAPH!!!!!! 
+
+\chapter{Three model agent}
 
 
 
