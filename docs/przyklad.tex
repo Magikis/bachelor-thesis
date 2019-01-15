@@ -44,14 +44,14 @@
 
 \chapter{Introduction}
 
-Autonomous cars are a very fashionable subject. The idea has a lot of benefits. Most of accidents on roads, occurs due to human mistakes. Programmes don't get tiered or distracted while driving a vehicle. Also they can save a lot of fuel with optimal decisions.
+Autonomous cars are very popular subject nowadays. The idea has a lot of benefits. Most of accidents on roads, occurs due to human mistakes. Programmes don't get tiered or distracted while driving a vehicle. Also they can save a lot of fuel with optimal decisions.
 That's why companies around the globe put a lot of effort into making the car software for autonomous driving. It is very interesting task from artificial intelligence perspective. Description of the world is huge. It includes near objects, borders of the street, speed, turning force, engine rotation and much more. The output of such programme is quite simple in compared to the input size. We need only to specify new position of steering wheel and decision if we want to speed up or slow down. During my work I wanted approach the problem by building my own agent capable of drive safely on a racing track.
 
 
 
 
 \section{TORCS Environment}
-"The online racing car simulator"(TORCS) is highly portable, multi platform car simulator, with various cars and tracks.  The simulation features a simple damage model, collisions, fuel consumption, tire and wheel properties (springs, dampers, stiffness), aerodynamics and much more \cite{TORCS}.  It is designed to enable programed agents compete against each others. There is very ditalied instruction on developing your  own bot. It has to be written as C++ loadable library and it is attached to main thread during program startup.
+"The online racing car simulator"(TORCS) is very accurate car simulator with 3D graphic engine. It allows to run races with various cars and tracks. The simulation features a damage model, fuel consumption, aerodynamics, wheel properties, aerodynamics, advanced sliping model and much more \cite{TORCS}.  It is designed to enable programed agents compete against each others. There is very ditalied instruction on developing your  own bot. It has to be written as C++ loadable library and it is attached to main thread during program startup.
 
 
 \begin{figure}[h]
@@ -72,13 +72,15 @@ SCRC competition took place between 2007 - 2015 with some breaks. It was organiz
     \label{fig:scrc_arc}
 \end{wrapfigure}
 
-Server sends current sensor inputs (track border, speed, lap time, etc...) and waits for 20ms for the client action (gas, break, steer, etc...). API is details are descrived in table from manual. With that change participants cant choose whatever language they want. That's why I decided to use patched version of TORCS game engine in version 1.3.7
+Server sends current sensor inputs (track border, speed, lap time, etc...) and waits for 10ms for the client action (gas, break, steer, etc...). API is details are descrived in table from manual. With that change participants cant choose whatever language they want. That's why I decided to use patched version of TORCS game engine in version 1.3.7
 
 Organizers provided "clients" programmes only in Java and C++. I didn't want to implement communication interface on my own, beacuse it's time consuming  and uninteresting task. After some research,  I found \url{http://xed.ch/p/snakeoil} project, which provides Python Class handling communication with TORCS server. It allowed me to add layer of abstraction and focus directly on driving functionality.
 
 \section{Game sensors and actions parametes}
     
-Server provides very accurate description of virtual environment state. All parameters are described in \ref{tab:torcs_sensors} \ref{tab:torcs_actions} table attached to SCRC competition manual \cite{scrc_manual}. 
+Server provides very accurate description of virtual environment state. All sensors used by ma agents are described in tables \ref{tab:torcs_sensors} \ref{tab:torcs_actions}.
+Full list of parameters provided by game engine can be found in SCRC competition manual \cite{scrc_manual}. Sensors allow to determined exact car position on the track, and also predict close future shape of the track.
+
 
 \begin{center}
     \begin{longtable}{ | p{0.18\textwidth} |p{0.25\textwidth}| p{0.57\textwidth} |}
@@ -87,25 +89,9 @@ Server provides very accurate description of virtual environment state. All para
      \hline
      angle & $[-\pi, +\pi]$ (rad) & Angle between the car direction and the direction the track axis. \\  
      \hline
-     curLapTime & $[0, +\infty)$ (s) & Time elapsed during current lap. \\
-     \hline
-     damage & $(0, +\infty)$ (point) & Current damage of the car. \\
-     \hline
      distFromStart & $[0, +\infty)$ (m) & Distance of the car from the start line along the track line. \\
      \hline
-     distRaced & $[0, +\infty)$ (m) & Distance covered by the car from the beginning of the race \\
-     \hline
-     fuel & $[0, +\infty)$ (l) & Current fuel level. \\
-     \hline
      gear & $ \{ -1,0,1, \dots, 6 \} $ & Current gear: -1 is reverse, 0 is neutral and the gear from 1 to 6. \\
-     \hline
-     lastLapTime & $[0, +\infty)$ (s) & Time to complete the last lap \\
-     \hline
-     opponents & $[0, 200]$ (m) & Vector of 36 opponent sensors: each sensor covers a span of 10 degrees within a range of 200 meters and returns the distance of the closest opponent in the covered area. \\
-     \hline
-     racePos & $\{1,2,\dots,N\}$ & Position in the race with respect to other cars. \\
-     \hline
-     rpm & $[0, +\infty)$ (rpm) & Number of rotation per minute of the car engine \\
      \hline
      speedX & $ ( -\infty, +\infty ) $ (km/h) & Speed of the car along the longitudinal axis of the car. \\
      \hline
@@ -113,50 +99,40 @@ Server provides very accurate description of virtual environment state. All para
      \hline
      speedZ & $ ( -\infty, +\infty ) $ (km/h) & Speed of the car along the Z axis of the car \\
      \hline        
-     track &  $[0, 200]$ (m) & Vector of 19 range finder sensors: each sensors returns the distance between the track edge and the car within a range of 200 meters. When noisy option is enabled, sensors are affected by i.i.d. normal noises with a standard deviation equal to the $10\%$ of sensors range. By default, the sensors sample the space in front of the car every 10 degrees, spanning clockwise from $-90$ degrees up to $+90$ degrees with respect to the car axis. However, the configuration of the range finder sensors (i.e., the angle w.r.t. to the car axis) can be set by the client once during initialization, i.e., before the beginning of each race. When the car is outside of the track (i.e., pos is less than $-1$ or greater than $1$), the returned values are not reliable (typically $-1$ is returned). \\
+     track &  $[0, 200]$ (m) & Vector of 19 range finder sensors: each sensors returns the distance between the track edge and the car within a range of 200 meters. \\
      \hline
-     trackPos & $( -\infty, +\infty )$ & Distance between the car and the track axis. The value is normalized w.r.t to the track width: it is $0$ when car is on the axis, $-1$ when the car is on the right edge of the track and $+1$ when it is on the left edge of the car. Values greater than $1$ or smaller than $-1$ mean that the car is outside of the track. \\
+     trackPos & $( -\infty, +\infty )$ & Normalized distance between the car and the track axis. Values beetwen $[-1, 1]$ means that the car is on the track. \\
      \hline
      wheelSpinVel & $[0, +\infty)$ (rad/s) & Vector of 4 sensors representing the rotation speed of wheels. \\
      \hline
-     z & $( -\infty, +\infty ) $ (km/h) & Distance of the car mass center from the surface of the track
-     along the Z axis \\
-     \hline
-     \caption{\label{tab:torcs_sensors}: Description of the available sensors.}
+     \caption{\label{tab:torcs_sensors}: Description of the available sensors. Cited from \cite{scrc_manual}}
     \end{longtable}
 
 \end{center}
 
 \begin{center}
-    \begin{longtable}{ | p{0.18\textwidth} |p{0.25\textwidth}| p{0.57\textwidth} |}
+    \begin{longtable}{ | p{0.18\textwidth} |p{0.2\textwidth}| p{0.57\textwidth} |}
     \hline
     \textbf{Name} & \textbf{Range (unit)} & \textbf{Description}  \\ 
     \hline
-    accel & $[0,1]$ & Virtual gas pedal (0 means no gas, 1 full gas). \\ 
+    accel & $\{0,1\}$ & Gas pedal \\ 
      \hline
-     brake &  $[0,1]$ & Virtual brake pedal (0 means no brake, 1 full brake). \\ 
-     \hline
-     clutch &  $[0,1]$ & Virtual clutch pedal (0 means no clutch, 1 full clutch). \\ 
+     brake &  $\{0,1\}$ & Brake pedal \\ 
      \hline
      gear & $\{-1,0,1,\dots ,6\}$ & Gear value. \\ 
      \hline
      steer &  $[-1,1]$ & Steering value: $-1$ and $+1$ means respectively full right and
-     left, that corresponds to an angle of $0.366519$ rad. \\ 
+     left \\ 
      \hline
-     focus &  $[-90,90]$ & Focus direction (see the focus sensors) in degrees. \\ 
-     \hline
-     endRace &  $\{0,1\}$ & This is meta-control command: 0 do nothing, 1 ask competition
-     server to restart the race. \\ 
-     \hline
-     \caption{\label{tab:torcs_actions}Description of the available  action parameters.}
+     \caption{\label{tab:torcs_actions}Description of the available  action parameters. Cited from \cite{scrc_manual}}
     \end{longtable}
 \end{center}
 
-\chapter{Standard programming approach}
+\chapter{Heuristic approach}
 
 \section{Line follower}
 
-The first approach to the problem was developing simple bot which follows the track axis. Every time, absolute value of trackPos sensor (normalized position of the car on the track between $[-1, +1]$) is bigger than given small threshold, agent turns towards axis of the track with turning force set to 35\%. To avoid zigzag driving, very small course corrections are applied, whenever $abs(trackPos) < 0.2$. Speed is limited to 80 km/h. These configuration allows bot to safely drive on every track. 
+The first approach to the problem was developing simple bot which follows the track axis. Every time, absolute value of trackPos sensor (normalized position of the car on the track between $[-1, +1]$) is bigger than given small threshold, agent turns towards axis of the track with turning force set to 35\%. To avoid zigzag driving, very small course corrections are applied, whenever $abs(trackPos) < 0.2$. Speed is limited to 80 km/h. Several configurations of constant parameters were tested and current configuration allows bot to safely drive on every track. 
 
 I am aware that limiting turing force, has huge negative impact on bot performance. However increasing that value leads to dangerous behaviors. I was surprised how easy it is to slip. During development line follower I haven't found any solution for getting out of the slip. For now limiting that value was necessary.
 
@@ -204,7 +180,7 @@ In following table I've presented line-follower performance on specific tracks f
     \centering
     \begin{tabular}{ |c|c|c|c|}
           \hline
-          track name & unexperienced driver[s] & line-follower[s] & speed limits[s]  \\
+          track name & unexperienced human[s] & line-follower[s] & speed limits[s]  \\
           \hline
           forza &  $122.65$ & $265.51$ & $146.31$   \\
           \hline
@@ -267,9 +243,9 @@ Second model used was Random Forest. It is based on multiple randomized decision
           \hline
           speed\_limits & $84.68$ & - & -\\
           \hline
-          CART &  $61.18$ & $0.81$ & $0.65$\\
+          CART &  $63.25$ & $0.81$ & $0.65$\\
           \hline
-          Random Forest &  $61.18$ & & \\
+          Random Forest & $65.39$ & $0.99$ & $0.66$ \\
           \hline
           
         \end{tabular}
@@ -281,7 +257,7 @@ Second model used was Random Forest. It is based on multiple randomized decision
 
 !!!MORE CONCLUSIONS!!!
 
-Performance was improved by 20\% even with poor model accuracy. Classifier accuracy on test data set is equal 61\%. Other models such as (Neural Network, Support Vector Machine, Random Forest) resulted in similar bad accuracy for test data set and all of them were getting out from the race track.   
+Performance was improved by 25\% even with poor model accuracy. Classifier accuracy on test data set is equal 61\%. Other models such as (Neural Network, Support Vector Machine, Random Forest) resulted in similar bad accuracy for test data set and all of them were getting out from the race track.   
 
 It is worth noticing, that using \textbf{distFromStart} (distance from start line according to track middle line) parameter isn't very practical for generalized driving agent. My models weren't learning how to drive a vehicle. The were rather memorizing right actions for specific sector of the track. We need model which can be applied also for unseen tracks. However without that parameter, all my models were crashing on the track. They were able only to apply similar actions in similar places.
 
@@ -317,6 +293,31 @@ Secondly with steer parameter determined by classifier we encounter following pr
 For classification problem both predictions (a and b) are equally wrong.  The class prediction is just missed. However for reconstructing steering actions case b) is much worse and more dangerous than a). When we are near edge of the track, that kind of wrong prediction can lead as away from the track resulting in a crash. When we approach setting \textit{steer} as regression problem we tends to choose values which are close to real ones. Regressor more accurately reflects steering actions which appears in the data set.
 
 \subsection{Results}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|c|}
+          \hline
+          agent & cg\_track\_2 result [s] & train set & test set \\
+          \hline
+          \textbf{double agent} & DNF &   &  \\
+          \hline
+          Steer regressor error [MSE]&   & $0.0041$ & $0.0043$\\
+          \hline
+          Acceleration classifier score [\%]&  & $0.99$ & $0.98$ \\
+          \hline
+          \textbf{double agent - joined state} & DNF &   &  \\
+          \hline
+          Steer regressor error [MSE]&   & $0.0026$ & $0.0028$\\
+          \hline
+          Acceleration classifier score [\%]&  & $0.99$ & $0.98$ \\
+          \hline
+          
+        \end{tabular}
+        \caption{Double models agents performance}
+        \label{tab:double_models_results}
+
+\end{table}
 
 
 All models trained on \textit{cg\_track\_2} data failed to stay on track for the whole race. Without
