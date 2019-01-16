@@ -83,7 +83,7 @@ Full list of parameters provided by game engine can be found in SCRC competition
 
 
 \begin{center}
-    \begin{longtable}{ | p{0.18\textwidth} |p{0.25\textwidth}| p{0.57\textwidth} |}
+    \begin{longtable}{ | p{0.18\textwidth} |p{0.25\textwidth}| p{0.45\textwidth} |}
      \hline
      \textbf{Name} & \textbf{Range (unit)} & \textbf{Description} \\ 
      \hline
@@ -282,7 +282,7 @@ Because of hardware limits I was able to train very simple networks regressor hi
 
 There were two observations in advantage of this architecture. 
 
-First of all, it significantly reduces amount of classes used in classifier. Three classes should be covered effectively by amount of collected data.
+First of all, it significantly reduces amount of classes used in classifier. Three classes should be covered effectively with amount of collected data.
 
 Secondly with steer parameter determined by classifier we encounter following problem with penalty for learning algorithm. Let's say we've got data sample with, action taken by human driver, to $steer=0.5$. Consider two wrongly predicted answers by models:
 \begin{itemize}
@@ -320,18 +320,30 @@ For classification problem both predictions (a and b) are equally wrong.  The cl
 \end{table}
 
 
-All models trained on \textit{cg\_track\_2} data failed to stay on track for the whole race. Without
-
+Models were trained on from single agent approach (without \textbf{distFromStart} sensor). Accuracy of models on testing set is quite reliable \ref{tab:double_models_results}. That's the effect of reducing number of actions classes. However agent is unable to finish the lap on training track. It appears that steering regressor isn't effective enough. 
 
 !!!! Paagraph about prev state !!!!
 
-One of ideas to improve these agent, was assumption that, maybe planning driving policy is impossible with only one data frame processed at once. To take into account longer period of time, agent remembers state and action from previous.
+One of ideas to improve these agent, was assumption that, maybe planning driving policy is impossible with only one data frame processed at once. To take into account longer period of time, agent remembers state and action from previous time frame and attaches it to both models inputs. Results of the experiment are shown in second part of table \ref{tab:double_models_results}. New approach allows to reduce mean squared error twice of steering regressor on data sets. However, agent driving is very aggressive. It includes a lot of sharp steering wheel turns even on straight sections of track. It is still unable to reach the finish line without a crash.
 
-!!!END OF THA PARAGRAPH!!!!!! 
+Even with significant improvement in accuracy, models are still not capable to drive safely on the track. Racing cars, drives extremely fast. One mistake in steering direction, can causes inevitable crash situation. There is no place for such mistakes.  
 
-\chapter{Three model agent}
+\section{Three model agent}
+
+Steering regressor accuracy is measured on absolute distance between magnitude of output and real steering value. It does not take into account steering direction. Also we should prioritize $steer = 0$ over small absolute values
 
 
+Let's say we've got data sample with, action taken by human driver, to $steer=0.1$. Consider two wrongly predicted answers by regressor:
+\begin{itemize}
+    \item[a)] $steer=-0.2$
+    \item[b)] $steer=0.3$
+\end{itemize}
+
+
+For steering regressor, both a) and b) are equally bad.
+
+
+To reduce number of steering errors, third model, called \textbf{steering supervisor} was created. It is classifier which is supposed to supervise steering regressor.
 
 
 
