@@ -326,24 +326,79 @@ Models were trained on from single agent approach (without \textbf{distFromStart
 
 One of ideas to improve these agent, was assumption that, maybe planning driving policy is impossible with only one data frame processed at once. To take into account longer period of time, agent remembers state and action from previous time frame and attaches it to both models inputs. Results of the experiment are shown in second part of table \ref{tab:double_models_results}. New approach allows to reduce mean squared error twice of steering regressor on data sets. However, agent driving is very aggressive. It includes a lot of sharp steering wheel turns even on straight sections of track. It is still unable to reach the finish line without a crash.
 
-Even with significant improvement in accuracy, models are still not capable to drive safely on the track. Racing cars, drives extremely fast. One mistake in steering direction, can causes inevitable crash situation. There is no place for such mistakes.  
+Even with significant improvement in accuracy, models are still not capable to drive safely on the track. Racing cars, drives extremely fast and one sharp turn in opposite direction, can causes inevitable crash situation. There is no place for such mistakes.  
 
 \section{Three model agent}
 
-Steering regressor accuracy is measured on absolute distance between magnitude of output and real steering value. It does not take into account steering direction. Also we should prioritize $steer = 0$ over small absolute values
+I've observed previous models performance and I've came to conclusion that biggest problem occurs when agent unexpectedly steer sharply sin opposite directions. Steering regressor accuracy is measured on absolute distance between magnitude of output and real steering value. It does not take into account steering direction, so we need to make this decision more important.
+
+\subsection{Steering supervision}
+
+I've achieved that with another classifier which I call \textbf{steering supervisor}. Input for this one is the same as other models, but output was extracted from training set by applying function $f$ on \textbf{steer} value from driver action. 
+$$ f(steer) =  \begin{cases}
+    sign(steer), &\quad steer\neq0 \\
+    0, &\quad \text{otherwise} \\
+  \end{cases}
+ $$
 
 
-Let's say we've got data sample with, action taken by human driver, to $steer=0.1$. Consider two wrongly predicted answers by regressor:
-\begin{itemize}
-    \item[a)] $steer=-0.2$
-    \item[b)] $steer=0.3$
-\end{itemize}
+To predict \textbf{steer} value we compute $m$ which is output of steering regressor and $d$ which is output of steering supervisor. Then we apply function $g$ for those values, and that's our output value. Function $g$ passes $m$ only when both models agreed on turning direction. Also when supervisor predicts no turning action, $g$ decreases $m$ significantly by constant.
+
+ $$ g(m, d) =  \begin{cases}
+    \frac{m}{c},  &\quad d = 0 \\
+    0, &\quad sign(m) \neq sign(d) \\
+    m, &\quad \text{otherwise} \\
+  \end{cases}
+ $$
+
+\subsection{Results}
+
+Training neural network is randomized process, which takes significant amount of time. Agents trained with same architecture can provides completely performance. 
+That's why for current architecture I've used simple reinforcement learning method. I've trained agents in a loop, ending an algorithm only when the current one was capable of safely finish the race. 
 
 
-For steering regressor, both a) and b) are equally bad.
+Every one of three model was a neural network from scikit-learn library \cite{scikit_learn}, with following parameters \ref{tab:triple_models_nn_params}:
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|}
+          \hline
+          Model & hidden layers & activation function \\
+          \hline
+          Steering regressor & (500,30) &  tanh  \\
+          \hline
+          Steering supervisor &  (350, 30) & tanh \\
+          \hline
+          Acceleration classifier & (200,20) & tanh \\
+          \hline
+        \end{tabular}
+        \caption{Triple model, neural networks parameters}
+        \label{tab:triple_models_nn_params}
+\end{table}
+
+Agent was tested on cg\_track\_2 and it's performance is shown in table \ref{tab:triple_models_results}. It is first successful agent, which doesn't use \textbf{distFromStart} parameter during models training. 
 
 
-To reduce number of steering errors, third model, called \textbf{steering supervisor} was created. It is classifier which is supposed to supervise steering regressor.
+ \begin{table}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|c|}
+          \hline
+          agent & cg\_track\_2 result [s] & train set & test set \\
+          \hline
+          \textbf{triple agent} & $63.44$ &   &  \\
+          \hline
+          Steer regressor error [MSE]&   & $0.0043$ & $0.0046$\\
+          \hline
+          Steer supervisor score & & $0.94$ & $0.90$ \\
+          \hline
+          Acceleration classifier score &  & $0.99$ & $0.98$ \\
+          \hline       
+        \end{tabular}
+        \caption{Triple models agents performance}
+        \label{tab:triple_models_results}
+
+\end{table}
+
 
 
 
