@@ -204,16 +204,18 @@ For very complex tasks creating an algorithm can be very challenging.
 
  Instead of that, we can try to extract statistical relations in collected data. Machine learning algorithms can be applied when we have algorithm input and expected output for every example in the data, but we have no idea how it should be achived. We receive not optimal, but approximately good solution for our problem and that's exactly what we want from spam detector. It should help users in omitting unwanted messages, but it's not a problem if he is wrong.
 
- Primary machine learning problem is classification. We want to assign every input to one of given classes. In our email example we've got two classes (SPAM, NOT-SPAM), but we can have much more of it. Model designed to solve that type of problems is called classifier. Quality of classifier can be measured by percentage of correctly predicted classes on the test data sets.
+ Primary machine learning problem is classification\cite{Introduction_ML}. We want to assign every input to one of given classes. In our email example we've got two classes (SPAM, NOT-SPAM), but we can have much more of it. Model designed to solve that type of problems is called classifier. Quality of classifier can be measured by percentage of correctly predicted classes on the test data sets.
 
- Problems where output is a single floating point number are called regression. Model which predicts price of car is much more useful thant one which assigns car to one of following classes  (cheap, medium, expensive). Such models are called regressors and we can measure their quality by counting mean squared error between real and predicted values on the test data set.
+ Problems where output is a single floating point number are called regression \cite{Introduction_ML}. Model which predicts price of car is much more useful thant one which assigns car to one of following classes  (cheap, medium, expensive). Such models are called regressors and we can measure their quality by counting mean squared error between real and predicted values on the test data set.
+
+In some problems, single action don't have huge impact on result. An action is good only as a part of good policy. Methods which focus on that approach are called reinforcement learning \cite{Introduction_ML}. Car driving can be classified as such problem. Sometimes there isn't optimal action for current situation, it is rather optimal sequence of action which gives positive result.
 
 
-\section{Applying machine learning for car driving agent}
+\section{Applying machine learning for car driving problem}
 
-Accuracy of machine learning models depends heavily on amount of collected data. Trains data set should describe whole space of problem variables. With plenty of data samples we can extract most meaningful dependencies and predict outputs on real life data samples. 
-
-Although  !!!!!INSERT REFERANCE!!!! we can see some success with learning car driving model on quite small data set. I don't have access to huge database of car driving logs, but during agents development I became well TORCS driver. So I decided to record my performance on race tracks.
+Accuracy of machine learning models depends heavily on amount of collected data. Trains data set should describe whole space of problem variables. With plenty of data samples we can extract most meaningful dependencies and predict outputs on real life data samples. However recent work by P. Dybiec \cite[2018]{rover}, which focuses on autonomous driving developed for martian rover shows that, it is possible to successfully apply machine learning technics with relatively small data set. 
+  
+I don't have access to huge database of car driving logs, but during agents development I became well TORCS driver. So I decided to record my performance on race tracks.
 
 Unfortunately TORCS environment does not have an option to log sensors data and driver actions. It is planned to add this functionality in the future development. That's why I developed software which mimics TORCS car controls and saves data from all sensors and driver actions to json file. From game perspective it is normal agent, but it reacts only on user keyboard inputs (accelerate, break, left, right).  With that infrastructure During 25 recording laps on \textit{cg\_track\_2}, I've collected around 55000 data frames (description of car state and driver action, saved every 10ms).
 
@@ -233,13 +235,13 @@ After splitting the data on train and test data set, I've trained classifiers to
 
 I've started with simple Decision Tree classifier. CART (classification and regression tree) algorithm produces binary tree which consist of decision nodes and terminal leafs. Every node holds a binary condition (for example $\textit{angle} > 0.37$) which passes data frame to one of it's children. Every leaf is labeled by class which it represents. To classify specific input we traverse a path directed by decision nodes. To choose variable and value used in condition creation we are minimizing impurity function. More detailed description can be found in \cite{Introduction_ML}.
 
-Second model used was Random Forest. It is based on multiple randomized decision trees. Final result is determined by averaging predictions of every tree included in the model. 
+Second model used was Random Forest. It contains multiple decisions tree, constructed with randomized algorithm (in my experiment, 40 trees). To predict class of data point, we average predictions from all trees in the model \cite{Introduction_ML}. 
 
 \begin{table}[h]
     \centering
     \begin{tabular}{ |c|c|c|c|}
           \hline
-          agent & cg\_track\_2 result [s] & train score [\%]& test score [\%]\\
+          agent & cg\_track\_2 result [s] & train score & test score \\
           \hline
           speed\_limits & $84.68$ & - & -\\
           \hline
@@ -255,9 +257,7 @@ Second model used was Random Forest. It is based on multiple randomized decision
 \end{table}
 
 
-!!!MORE CONCLUSIONS!!!
-
-Performance was improved by 25\% even with poor model accuracy. Classifier accuracy on test data set is equal 61\%. Other models such as (Neural Network, Support Vector Machine, Random Forest) resulted in similar bad accuracy for test data set and all of them were getting out from the race track.   
+Despite poor accuracy on test models, performance was improved by almost 25\%, compared to heuristic agent with speed limits. Difference between train and test score is large, so models are overfitted. Anyway, agent can recreate enough human actions, to stay on well known part of track. 
 
 It is worth noticing, that using \textbf{distFromStart} (distance from start line according to track middle line) parameter isn't very practical for generalized driving agent. My models weren't learning how to drive a vehicle. The were rather memorizing right actions for specific sector of the track. We need model which can be applied also for unseen tracks. However without that parameter, all my models were crashing on the track. They were able only to apply similar actions in similar places.
 
@@ -267,7 +267,7 @@ Major flaw for previous one model agent was tha amount of classes used in classi
 
 \begin{itemize}
     \item \textbf{Steer Regressor} - responsible for determining the turn rate (floating number between [-1,1]).
-    \item \textbf{Acceleration Classifier} - responsibrle for choosing one of three speed actions \{accelerate, do\_nothing, brake\}
+    \item \textbf{Acceleration Classifier} - responsible for choosing one of three speed actions \{accelerate, do\_nothing, brake\}
 \end{itemize}
 
 State vector for regressor is the same as on used in single model approach. Classifier input is expanded by \textbf{steer} value predicted by the regressor. Intuition behind passing value between two models is that, breaking and accelerating during turning the manoeuver, leads to dangerous behaviors. Humans tends to reduce the car speed before beginning of the turn. Acceleration classifier should depend on expected steering decision.
@@ -330,11 +330,12 @@ Even with significant improvement in accuracy, models are still not capable to d
 
 \section{Three model agent}
 
-I've observed previous models performance and I've came to conclusion that biggest problem occurs when agent unexpectedly steer sharply sin opposite directions. Steering regressor accuracy is measured on absolute distance between magnitude of output and real steering value. It does not take into account steering direction, so we need to make this decision more important.
+I've been observing previous models performance and I've came to conclusion that biggest problem occurs when agent unexpectedly steer sharply in opposite directions. Steering regressor accuracy is measured on absolute distance between magnitude of output and real steering value. It does not take into account steering direction, so we need to put more effort in correctness of that decision.
 
 \subsection{Steering supervision}
 
-I've achieved that with another classifier which I call \textbf{steering supervisor}. Input for this one is the same as other models, but output was extracted from training set by applying function $f$ on \textbf{steer} value from driver action. 
+
+\textbf{Steering supervisor} classifier is supposed to reduce amount of missed steering directions decisions. Input for this one is the same as other models. Training output is extracted from data set by applying function $f$ on \textbf{steer} value from driver actions. 
 $$ f(steer) =  \begin{cases}
     sign(steer), &\quad steer\neq0 \\
     0, &\quad \text{otherwise} \\
@@ -342,7 +343,7 @@ $$ f(steer) =  \begin{cases}
  $$
 
 
-To predict \textbf{steer} value we compute $m$ which is output of steering regressor and $d$ which is output of steering supervisor. Then we apply function $g$ for those values, and that's our output value. Function $g$ passes $m$ only when both models agreed on turning direction. Also when supervisor predicts no turning action, $g$ decreases $m$ significantly by constant.
+To predict \textbf{steer} value we compute $m$ which is output of steering regressor and $d$ which is output of steering supervisor. Then we apply function $g$ for those values, and that's our final \textbf{steer} value. Function $g$ passes $m$ only when both models agreed on turning direction. Also when supervisor predicts no turning action, $g$ decreases $m$ significantly by a constant.
 
  $$ g(m, d) =  \begin{cases}
     \frac{m}{c},  &\quad d = 0 \\
@@ -351,13 +352,19 @@ To predict \textbf{steer} value we compute $m$ which is output of steering regre
   \end{cases}
  $$
 
+\subsection{Minor improvements}
+One of the most important sensors is \textbf{angle}. It allows agent to determine car orientation in reference to the track. To extract more informations from sensor and take into account nonlinearity, the value in all inputs is replaced with sine and cosine of \textbf{angle} parameter. It should give more meaningful knowledge for the agent. 
+
+
+Training neural network is randomized process, which takes significant amount of time. Agents trained with same architecture can provides completely different performance. 
+That's why for current architecture I've used simple reinforcement learning method. I've trained agents in a loop, ending an algorithm with success only when the current one was capable of safely finishing the race. 
+
+
 \subsection{Results}
 
-Training neural network is randomized process, which takes significant amount of time. Agents trained with same architecture can provides completely performance. 
-That's why for current architecture I've used simple reinforcement learning method. I've trained agents in a loop, ending an algorithm only when the current one was capable of safely finish the race. 
 
 
-Every one of three model was a neural network from scikit-learn library \cite{scikit_learn}, with following parameters \ref{tab:triple_models_nn_params}:
+Every single model was a neural network from scikit-learn library \cite{scikit_learn}, with following parameters given in table \ref{tab:triple_models_nn_params}.
 
 \begin{table}[h]
     \centering
@@ -399,7 +406,9 @@ Agent was tested on cg\_track\_2 and it's performance is shown in table \ref{tab
 
 \end{table}
 
+Data used to train models was collected on cg\_track\_2. To check driving abilities of three model agent we need to drive it in unseen previously environment. I've tried to test it on tracks with similar road width. Agent was stable and was taking reasonable decisions, but weren't able to finish the race. Problem appears on long sharp turns. Agent see only information about the track exactly in front of him, there is no way to predict how long the turn actually is. Very often the speed at the beginning of the turn is to high. We would need a mechanism which provides desired speed on current section, because we are unable to extract that information from single state frame.
 
+To improve agent performance on unseen tracks I've tried to use speed limits approach from chapter 2. It would help with previously mentioned high speed problems. However to use learning algorithm, our agent must be capable of finishing lap with minimal available speed (40 km/h) and it isn't. The problem is that our models have never drive with such small speed. It's enlivenment not covered by training set. Decisions taken by driver are completely random, and the race ends on the first turn. Amount of collected that covers only a small fraction of possible states, so agent has to mirror human driver actions and cannot make his own decisions.
 
 
 \chapter{Adidtonal Problems}
@@ -416,8 +425,9 @@ Agent was tested on cg\_track\_2 and it's performance is shown in table \ref{tab
 \bibitem{scrc_manual} Daniele Loiacono, Luigi Cardamone, Pier Luca Lanzi, “Simulated Car
 Racing Championship: Competition Software Manual”, Technical Report 2011.06, Dipartimento
 di Elettronica e Informazione, Politecnico di Milano, Italy, 2011.
-\bibitem{Introduction_ML} Introduction to Machine Learning
-\bibitem{scikit_learn} Scikit learn
+\bibitem{Introduction_ML} Ethem Alpaydin, Introduction to Machine Learning, The MIT Press, 2010
+\bibitem{scikit_learn} Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
+\bibitem{rover} P. Dybiec, "Veryfing the remote control capabilities of rover using neural networks", https://github.com/dyniec/thesis/blob/master/iithesis.pdf Wrocław 2018
 
 \end{thebibliography}
 
