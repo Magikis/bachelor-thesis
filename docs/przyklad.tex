@@ -420,17 +420,24 @@ However without huge data set it can't be generalized for driving on new tracks.
 
 \section{Future Work}
 
-While we developed agent which solves basic problem there still room for improvements. There was not enough time to try out ideas mentioned bellow.
+While we developed agent which solves basic problem there still room for improvements. Following ideas can be used in case of project continuation.
 \begin{itemize}
-    \item Implementation of neural networks in scikit-library is very basic. It can not use a graphic card for computation. With usage of libraries designated to neural networks (PyTorch, TensorFlow)  
+    \item First obvious observation, we do not have enough data. Instead of 25 recordings we need thousands of them, with different speeds, drivers and on different tracks. With more data it should be possible to achieve satisfying performance on unseen race tracks. 
+    \item Driving the vehicle with the keyboard is very sharp and discrete. To turn correctly you need to press and squeeze steering key multiple times. Recording agent can be connected to the gaming steering wheel and pedals. In that case we can more accurately measure, humans drivers intentions.
+
+    \item Implementation of neural networks in scikit-library is very basic. It can not use a graphic card for computation. With usage of libraries designated to neural networks (PyTorch, TensorFlow) it would be possible to precess more data frames during models training.
+    \item Agents with machine learning models  can be only as good human drivers, which created the date set. It is huge limitation, that's why it is worth to expand heuristic approach. Instead of following the line located in the middle of the track, we should drive one lap with very small speed. Record shape of the track, and then determine the optimal, smooth, route line and follow it during a real race. 
+    \item More reinforcement learning approach can be also applied. Developed agents take into account only current state and try determine best action. To encourage smooth driving, agent should try determine best sequence of actions.
 \end{itemize}
 
 
 
-\section{}
+\section{Aditional problems}
+In this section I've described problems , which I encountered during my work.  
+
 \begin{itemize}
-    \item \textbf{Transmission} Chosen architecture didn't allowed me to use automatic transmission included with the torcs game. I had to build my own basic automatic transmission system, which is far from perfect. I haven't change it during development of different agents, so all results are comparable. 
-    \item Python real-time system limitations
+    \item \textbf{Transmission}: Chosen architecture didn't allowed me to use automatic transmission included with the torcs game. I had to build my own basic automatic transmission system, which is far from perfect. I haven't change it during development of different agents, so all results are comparable. 
+    \item TORCS racing server waits only 10ms for answer from agent program. In case there is no answer for current state, engine executes last sent action and very often is resulting in losing control over the car. While programming in python is very convenient, programmer can't manually manage memory. When garbage collector function is called, execution of user code is suspended and it can take much longer than 10ms. The only possible solution was turning off garbage collector, which means that my agents never free memory. To develop more reliable agents, switching programming language to C++ is advisable, because right know, programs can run for only limited amount of time.
 \end{itemize}
 
 
