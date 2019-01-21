@@ -1,2 +1,2 @@
-# engineering-thesis
-Car driving agent in the TORCS enviroment
+# bachelor-thesis
+Developing car driving agent in theTORCS virtual environment
