@@ -2,8 +2,8 @@
 \usepackage[utf8]{inputenc}
 
 %%%%% Tittle page
-\polishtitle    {Tworzenie agenta kierującego pojazdem w wirtualnym środowisku TORCS}
-\englishtitle   {Developing car driving agent in the TORCS virtual environment }
+\polishtitle    {Tworzenie Agenta Kierującego Pojazdem w Wirtualnym Środowisku TORCS}
+\englishtitle   {Developing Car Driving Agent in the TORCS Virtual Environment }
 \polishabstract {\ldots}
 \englishabstract{\ldots}
 \author         {Kacper Kulczak}
@@ -22,7 +22,8 @@
     longtable,
     wrapfig,
     amsmath,
-    algorithmic
+    algorithmic,
+    algorithm
     % amssymb,
     % amsthm,
     % amsfonts,
@@ -45,7 +46,7 @@ W pracy zostali przedstawienie agenci, stworzeni przez autora,  korzystający z 
 
 \englishabstract{
 The subject of this work is the implementation and testing of agents driving a vehicle in a virtual TORCS environment.
-Agents developed by author use heuristic and machine learning technics. Their implementation and performance (compared to human drivers) is described, along with contribuiton to varius subjects as function optimization, regression, classification and supevised learning.
+Agents developed by the author use heuristic and machine learning technics. Their implementation and performance (compared to human drivers) is described, along with contribuiton to varius subjects as function optimization, regression, classification and supevised learning.
 }
 
 
@@ -56,16 +57,16 @@ Agents developed by author use heuristic and machine learning technics. Their im
 
 \chapter{Introduction}
 
-Autonomous cars are very trendy subject nowadays.
+Autonomous cars are very popular subject nowadays.
 Most of accidents on roads, occurs due to humans mistakes.
-Programes don't get tiered or distracted while driving a vehicle.
-Also they can save a lot of fuel with optimal decisions.
+Artificial agents don't get tiered or distracted while driving a vehicle.
+They also can save a lot of fuel with optimal decisions.
 That's why companies around the globe put a lot of effort into making reliable car software for autonomous driving.
 It is very interesting task from artificial intelligence perspective. Description of the world is huge.
 It includes near objects, borders of the street, speed, turning force, engine rotation and much more.
-The output of such programe is quite simple in compared to the input size.
+The output of such agent is quite simple compared to the input size.
 We need only to specify new position of steering wheel and decision if we want to speed up or slow down.
-In this work, I built agents  capable of drive safely in virtual TORCS environment. I find that heuristic and also machine learning models can achieve acceptable performance.
+In this work  I built agents  capable of drive safely in virtual TORCS environment. I find that heuristic, and machine learning models can both achieve acceptable performance.
 
 
 
@@ -73,7 +74,7 @@ In this work, I built agents  capable of drive safely in virtual TORCS environme
 "The online racing car simulator"(TORCS) is very accurate car simulator with 3D graphic engine.
 It allows to run races with various cars and tracks.
 The simulation features a damage model, fuel consumption, aerodynamics, wheel properties, aerodynamics, advanced slipping model and much more \cite{TORCS}.
-It is designed to enable programed agents compete against each other.
+It is designed to enable artificial agents compete against each other.
 On project website, there is very detailed instruction on developing your own bot.
 It has to be written as C++ loadable library and it is attached to main thread during program startup.
 
@@ -83,24 +84,24 @@ It has to be written as C++ loadable library and it is attached to main thread d
     \caption{Screen shot from TORCS race \cite{TORCS}}
     \label{fig:torcs}
 \end{figure}
-Due to fact, I have much more experience with programing in high level languages, clean TORCS environment did not meet all my expectations. 
+Due to fact, I have much more experience with programming in high level languages, clean TORCS environment did not meet all my expectations. 
 
 
 \section{Simulated Car Racing Championship}
 
 SCRC competition took place between 2007 - 2015 with some breaks. It was organized by the University of Adelaide and the Politecnico de Milano.
-They used TORCS engine for competition, but organizers provided official patch which changed architecture of the program.
+They used TORCS engine for competition, but organizers provided official patch which changed architecture of the program \cite{SCRC}.
 After patching, TORCS became client-server application which allows multiple bots communicate with game engine via UDP connections. 
 
-\begin{wrapfigure}{R}{0.5\textwidth}
-    \includegraphics[width=0.5\textwidth]{img/scr_architecture.png}
+\begin{wrapfigure}{R}{0.6\textwidth}
+    \includegraphics[width=0.6\textwidth]{img/scr_architecture.png}
     \caption{Simulated Car Racing Championship - architecture overview \cite{scrc_manual}}
     \label{fig:scrc_arc}
 \end{wrapfigure}
 
 Server sends current sensor inputs (track border, speed, lap time, etc...) and waits for 10ms for the client action response (gas, break, steer, etc...).
  API details are described in competition manual \cite{scrc_manual}.
- With that change participants cant choose whatever language they want.
+ With that change participants can't choose whatever language they want.
  That's why I decided to use patched version of TORCS game engine in version 1.3.7
 
 Organizers provided "clients" programes only in Java and C++ languages.
@@ -108,15 +109,33 @@ I didn't want to implement communication interface on my own, because it's time 
 After some research, I found \url{http://xed.ch/p/snakeoil} project, which provides Python class handling communication with TORCS server.
 It allowed me to add layer of abstraction and focus directly on driving functionality.
 
-\section{Game sensors and actions parametes}
+\section{Game Sensors and Actions Parameters}
     
+
 Server provides very accurate description of virtual environment state.
-All sensors used by my agents are described in tables \ref{tab:torcs_sensors} \ref{tab:torcs_actions}.
-Full list of parameters provided by game engine can be found in SCRC competition manual \cite{scrc_manual}. Sensors allow to determined exact car position on the track, and shape of the track visible from driver perspective.
+All sensors used by my agents are described in Tables \ref{tab:torcs_sensors} and \ref{tab:torcs_actions}.
+Full list of parameters provided by the game engine can be found in the SCRC competition manual \cite{scrc_manual}.
+
+\subsection{State Parameters}
+
+Sensors allow to determine exact car position on the track, and shape of the track.
+Track sensors are straight lines, so agent has informations only about environment in front of it. Agent don't know how sharp and long the turn is before beginning of the  manuever.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{img/sensors.png}
+    \caption{Sensors visualization. Image from \cite{SCRC}}
+    \label{fig:sensors_img}
+\end{figure}
 
 
-\begin{center}
-    \begin{longtable}{ | p{0.18\textwidth} |p{0.25\textwidth}| p{0.45\textwidth} |}
+Opponents sensors are available in the environment, but they are not used in this work. Agents drive alone on the track to focus mostly on agent performance without randomness resulting from the behavior of opponents.
+
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |p{2.5cm}|p{2.8cm}|p{8cm}|}
      \hline
      \textbf{Name} & \textbf{Range (unit)} & \textbf{Description} \\ 
      \hline
@@ -124,13 +143,15 @@ Full list of parameters provided by game engine can be found in SCRC competition
      \hline
      distFromStart & $[0, +\infty)$ (m) & Distance of the car from the start line along the track line. \\
      \hline
-     gear & $ \{ -1,0,1, \dots, 6 \} $ & Current gear: -1 is reverse, 0 is neutral and the gear from 1 to 6. \\
+     gear & $ \{ -1,0,1, \dots, 6 \} $ & Current gear: -1 is reverse, 0 is neutral and the gear from 1 to 6 is forward. \\
      \hline
      speedX & $ ( -\infty, +\infty ) $ (km/h) & Speed of the car along the longitudinal axis of the car. \\
      \hline
      speedY & $ ( -\infty, +\infty ) $ (km/h) & Speed of the car along the transverse axis of the car. \\
      \hline
      speedZ & $ ( -\infty, +\infty ) $ (km/h) & Speed of the car along the Z axis of the car \\
+     \hline
+     rpm & $ [0, +\infty ) $ (rpm) & Number of rotation per minute of the car engine. \\
      \hline        
      track &  $[0, 200]$ (m) & Vector of 19 range finder sensors: each sensors returns the distance between the track edge and the car within a range of 200 meters. \\
      \hline
@@ -138,17 +159,19 @@ Full list of parameters provided by game engine can be found in SCRC competition
      \hline
      wheelSpinVel & $[0, +\infty)$ (rad/s) & Vector of 4 sensors representing the rotation speed of wheels. \\
      \hline
+    \end{tabular}
      \caption{\label{tab:torcs_sensors}: Description of the available sensors. Cited from \cite{scrc_manual}}
-    \end{longtable}
+\end{table}
 
-\end{center}
+\subsection{Action Parameters}
 
-\begin{center}
-    \begin{longtable}{ | p{0.18\textwidth} |p{0.22\textwidth}| p{0.5\textwidth} |}
-    \hline
-    \textbf{Name} & \textbf{Range (unit)} & \textbf{Description}  \\ 
-    \hline
-    accel & $\{0,1\}$ & Gas pedal \\ 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|p{1.2cm}|p{2.8cm}|p{8.5cm}|}
+        \hline
+        \textbf{Name} & \textbf{Range (unit)} & \textbf{Description} \\ 
+        \hline
+        accel & $\{0,1\}$ & Gas pedal \\ 
      \hline
      brake &  $\{0,1\}$ & Brake pedal \\ 
      \hline
@@ -157,18 +180,50 @@ Full list of parameters provided by game engine can be found in SCRC competition
      steer &  $[-1,1]$ & Steering value: $-1$ and $+1$ means respectively full right and
      left \\ 
      \hline
-     \caption{\label{tab:torcs_actions}Description of the available  action parameters. Cited from \cite{scrc_manual}}
-    \end{longtable}
-\end{center}
+    \end{tabular}
+    
+    \caption{\label{tab:torcs_actions}Description of the available  action parameters. Cited from \cite{scrc_manual}}
+\end{table}
 
-\chapter{Heuristic approach}
+Actions in TORCS are simpler than ones taken by drivers in real life.
+In virtual environment braking and accelerating are binary decisions (with physical pedals you can graduate action force).
+Steering value, on the other hand is continues parameter, similar to the real car steering wheel.
+If gear value differs from  gear value given in state, game engine changes the gear to one specified in te action.
 
-\section{Line follower}
+\subsection{Transmission}
+
+
+Chosen architecture didn’t allowed me to use automatic transmission included with the torcs game.
+I had to build my own basic automatic transmission system, which is far from perfect.
+It is set of rules based on \textbf{speedX} and \textbf{rpm} values from game state determining optimal \textbf{gear} value.
+Coefficients of transmission were chosen by observing default TORCS automatic transmission bheaviour during multiple races.
+My automatic transmission is used in all experiments and learning algorithms, so all results in this work are comparable.
+
+
+\chapter{Heuristic Approach}
+
+\section{Line Follower}
 
 The first approach to the problem was developing simple bot which follows the track axis.
-Every time, absolute value of trackPos sensor (normalized position of the car on the track between $[-1, +1]$) is bigger than given small threshold, agent turns towards axis of the track with turning force set to 35\%.
-To avoid zigzag driving, very small course corrections are applied, whenever $abs(trackPos) < 0.2$.
-Speed is limited to 80 km/h.
+
+
+\begin{algorithm}
+    \caption{Calculate steer value}
+    \label{alg:steer}
+    \begin{algorithmic}
+        \IF{$abs(trackPos) < 0.2$} 
+        \STATE {$steer\_value :=  angle * \epsilon$}
+        \ELSE 
+        \STATE {$target\_angle := trackPos * 90$}
+        \STATE {$steer\_value := sign(angle - target\_angle) * 0.35$}
+        \ENDIF
+    \end{algorithmic}
+\end{algorithm}
+
+Every time, absolute value of \textbf{trackPos} sensor (normalized position of the car on the track between $ [-1, +1] $) is relatively small ($ < 0.2 $) delicate course corrections are applied. It allows to avoid zigzag driving, when close to the middle of the track
+When \textbf{trackPos} is bigger than given threshold, algorithm computes target\_angle which should lead to better position of the car.
+Then agent tries to reach target\_angle, by applying constant steer magnitude of $0.35$.
+Speed of the car is also limited to 80 km/h.
 Several configurations of constant parameters were tested and current configuration allows bot to safely drive on every track.
 
 
@@ -178,9 +233,9 @@ I was surprised how easy it is to slip.
 During development line follower I haven't found any solution for getting out of the slip.
 For now limiting that value was necessary.
 
-\section{Speed limit signs}
+\section{Speed Limit Signs}
 
-In real world, government for safety reasons, places speed limit sign on dangerous sections of roads.
+In real world government, for safety reasons, places speed limit sign on dangerous sections of roads.
 Signs are placed before sharp turns, steep slopes, bridges, viaducts, where risk of crash is higher than usual.
 Drivers adjust the speed to specific environment conditions.
 Inspired by this observation, I tried to improve previous agent.
@@ -216,17 +271,22 @@ I've implemented algorithm, which uses binary search to find optimum, for every 
 It finds maximal x, where $g(x) \neq \infty$.
 We run that procedure on every argument:
 
-\begin{algorithmic}
-    \STATE $l_i\gets 40$
-    \FOR{$i\gets 1,\dots, n$}
-        \STATE $l_i = binary\_search(func=g_i, min=40, max=300)$
-    \ENDFOR
-\end{algorithmic}
+\begin{algorithm}
+    \caption{Speed limits learning}
+    \label{alg:speed_limits}
+    \begin{algorithmic}
+        \STATE $l_i\gets 40$
+        \FOR{$i\gets 1,\dots, n$}
+            \STATE $l_i = binary\_search(func=g_i, min=40, max=300)$
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
 
 For every section it uses around 12 game engine runs.
 So whole algorithm ends execution after reasonable amount of time.
 
-\section{Results and observations}
+\section{Results and Observations}
 
 In following table I've presented line-follower performance on specific tracks from TORCS environment.
 While speed limits are significant improvement, they still do not deal with major flaw of the concept.
@@ -240,17 +300,17 @@ That's why I resign from extending current concept.
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{ |c|c|c|c|}
+    \begin{tabular}{ |c|c|c|c|c|}
           \hline
-          track name & unexperienced human[s] & line-follower[s] & speed limits[s]  \\
+          track name & unexperienced human[s] & line-follower[s] & speed limits[s] & 16 sl  \\
           \hline
           forza &  $122.65$ & $265.51$ & $146.31$   \\
           \hline
-          cg\_track\_2 & $79.64$ & $148.84$ &  $84.68$  \\ 
+          cg\_track\_2 & $79.64$ & $148.84$ &  $84.68$ & $79.71$ \\ 
           \hline
           cg\_track\_3 & $102.09$ & $133.74$ & $91.86$   \\
           \hline
-        \end{tabular}
+    \end{tabular}
         \caption{Line follower performance for specific TORCS tracks}
         \label{tab:line_follower}
 
@@ -293,7 +353,7 @@ Car driving can be classified as such problem.
 Sometimes there isn't optimal action for current situation, it is rather optimal sequence of action which gives positive result.
 
 
-\section{Applying machine learning for car driving problem}
+\section{Applying Machine Learning for Car Driving Problem}
 
 Accuracy of machine learning models depends heavily on amount of collected data.
 Data set, should describe whole space of problem variables.
@@ -310,7 +370,7 @@ That's why I developed software which mimics TORCS car controls and saves data f
 From game perspective it is normal agent, but it reacts only on user keyboard inputs (accelerate, break, left, right).
  With that infrastructure During 25 recording laps on \textit{cg\_track\_2}, I've collected around 55000 data frames (description of car state and driver action, saved every 10ms).
 
-\section{Single model agent}
+\section{Single Model Agent}
 
 
 
@@ -380,7 +440,7 @@ We need model which can be applied also for unseen tracks.
 However without that parameter, all my models were crashing on the track.
 They were able only to apply similar actions in similar places.
 
-\section{Two models agent}
+\section{Two Models Agent}
 
 Major flaw for previous one model agent was the huge number of classes used in classification.
 Data set is too small for such variety of decisions.
@@ -406,7 +466,7 @@ Because of hardware limits I was able to train only very simple networks (regres
 Input data have all parameters from single model agent, except \textbf{distFromStart} parameter.
 All of them are standardized in range [-1,1].
 
-\subsection{Architecture motivations}
+\subsection{Architecture Motivations}
 
 There were two observations in advantage of this architecture.
 
@@ -477,13 +537,13 @@ Racing cars, drives extremely fast and one sharp turn in opposite direction, can
 There is no place for such missed actions.
  
 
-\section{Three model agent}
+\section{Three Model Agent}
 
 I've been observing previous models performance and I've came to conclusion that biggest problem occurs when agent unexpectedly steer sharply in opposite directions.
 Steering regressor accuracy is measured on absolute distance between magnitude of output and real steering value.
 It does not take into account steering direction, so we need to put more effort in correctness of that decision.
 
-\subsection{Steering supervision}
+\subsection{Steering Supervision}
 
 
 \textbf{Steering supervisor} classifier is supposed to reduce amount of missed steering directions decisions.
@@ -509,7 +569,7 @@ Also when supervisor predicts no turning action, $g$ decreases $m$ significantly
   \end{cases}
  $$
 
-\subsection{Minor improvements}
+\subsection{Minor Improvements}
 One of the most important sensors is \textbf{angle}.
 It allows agent to determine car orientation in reference to the track.
 To extract more informations from sensor and take into account nonlinearity, the value in all inputs is replaced with sine and cosine of \textbf{angle} parameter.
@@ -628,7 +688,7 @@ To encourage smooth driving, agent should try determine best sequence of actions
 
 
 
-\section{Aditional problems}
+\section{Aditional Problems}
 In this section I've described not mentioned problems , which I encountered during my work.
  
 
@@ -639,10 +699,10 @@ I haven't change it during development of different agents, so all results are c
 
     \item TORCS racing server waits only 10ms for answer from agent program.
 In case there is no answer for current state, engine executes last sent action and very often is resulting in losing control over the car.
-While programing in python is very convenient, programer can't manually manage memory.
+While programming in python is very convenient, programer can't manually manage memory.
 When garbage collector function is called, execution of user code is suspended and it can take much longer than 10ms.
 The only possible solution was turning off garbage collector, which means that my agents never free memory.
-To develop more reliable agents, switching programing language to C++ is advisable, because right know, programs can run for only limited amount of time.
+To develop more reliable agents, switching programming language to C++ is advisable, because right know, programs can run for only limited amount of time.
 \end{itemize}
 
 
@@ -650,6 +710,7 @@ To develop more reliable agents, switching programing language to C++ is advisab
 
 \begin{thebibliography}{1}
 \bibitem{TORCS} B. Wymann, E. Espié, C. Guionneau, C. Dimitrakakis, R. Coulom, A. Sumner. TORCS: The Open Racing Car Simulator, v1.3.6, 2014.
+\bibitem{SCRC} Loiacono, Daniele et al. “The 2009 Simulated Car Racing Championship.” IEEE Transactions on Computational Intelligence and AI in Games 2 (2010): 131-147.
 \bibitem{scrc_manual} Daniele Loiacono, Luigi Cardamone, Pier Luca Lanzi, “Simulated Car
 Racing Championship: Competition Software Manual”, Technical Report 2011.06, Dipartimento
 di Elettronica e Informazione, Politecnico di Milano, Italy, 2011.
