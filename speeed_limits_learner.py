@@ -30,7 +30,7 @@ def bisect(f, a, times, alpha=150):
 
 
 def main(**args):
-    table = np.array([40.] * 8)
+    table = np.array([40.] * 16)
     hist = []
     for i, x in enumerate(table):
         speed_limits = table.copy()

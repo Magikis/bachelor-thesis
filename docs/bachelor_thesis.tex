@@ -59,9 +59,10 @@ Agents developed by the author use heuristic and machine learning technics. Thei
 
 Autonomous cars are very popular subject nowadays.
 Most of accidents on roads, occurs due to humans mistakes.
-Artificial agents don't get tiered or distracted while driving a vehicle.
+Programs responsible for driving cars are called agents.
+Agents don't get tiered or distracted while driving a vehicle.
 They also can save a lot of fuel with optimal decisions.
-That's why companies around the globe put a lot of effort into making reliable car software for autonomous driving.
+That's why companies around the globe put a lot of effort into making reliable car software for autonomous driving \cite{autonomus_driving}.
 It is very interesting task from artificial intelligence perspective. Description of the world is huge.
 It includes near objects, borders of the street, speed, turning force, engine rotation and much more.
 The output of such agent is quite simple compared to the input size.
@@ -104,7 +105,7 @@ Server sends current sensor inputs (track border, speed, lap time, etc...) and w
  With that change participants can't choose whatever language they want.
  That's why I decided to use patched version of TORCS game engine in version 1.3.7
 
-Organizers provided "clients" programes only in Java and C++ languages.
+Organizers provided "clients" programs only in Java and C++ languages.
 I didn't want to implement communication interface on my own, because it's time consuming  and uninteresting task.
 After some research, I found \url{http://xed.ch/p/snakeoil} project, which provides Python class handling communication with TORCS server.
 It allowed me to add layer of abstraction and focus directly on driving functionality.
@@ -252,13 +253,13 @@ $$ f(l_1, l_2, \dots, l_n ) =  \begin{cases}
   \end{cases}
  $$
 
-I was trying to implement genetic algorithm for finding optimal limits for given track, but it appears that game engine, even with turned graphics off, isn't as fast as I anticipated.
+I was trying to implement genetic algorithm for finding optimal limits for given a track, but it appears that game engine, even with turned graphics off, isn't as fast as I anticipated.
 It takes almost 20 seconds, to complete one lap.
 Simple genetic algorithm would need long hours to find approximately good solution.
 I've used two following observations while developing my optimization algorithm.
 
 \begin{itemize}
-    \item  $l_i \in [40, 300]$:  Smaller values can lead to disqualification from race.
+    \item  $l_i \in [40, 300]$: When car speed is set to value below 40 km/h, the maximum duration of the lap is exceeded. It results in agent disqualification. Car driven by the agent has maximum speed below 300 km/h.
     \item  true speed of car on section $i$, depends on $l_i$ and true speed at the end of section $i-1$
     \item
     $l_i$ is correct, when $l_{i+1} = 40$ and car didn't fell out from track
@@ -267,17 +268,20 @@ I've used two following observations while developing my optimization algorithm.
 \end{itemize}
 
 
-I've implemented algorithm, which uses binary search to find optimum, for every section.
-It finds maximal x, where $g(x) \neq \infty$.
-We run that procedure on every argument:
+To find maximum of $g_i(x)$ we need previously computed optimal $l_1, \dots, l_{i-1}$, and $l_{i+1}, \dots, l_n$ set to 40, to be sure that car won't fell out from the track. 
+I've implemented algorithm \ref{alg:speed_limits}, which uses induction and binary search to find optimum, for every section. 
+It finds maximal x, while $g(x) \neq \infty$.
+After algorithm, $l$ are optimal speed limits for specific track sections.
 
 \begin{algorithm}
     \caption{Speed limits learning}
     \label{alg:speed_limits}
     \begin{algorithmic}
-        \STATE $l_i\gets 40$
         \FOR{$i\gets 1,\dots, n$}
-            \STATE $l_i = binary\_search(func=g_i, min=40, max=300)$
+            \STATE $l_i \gets 40$
+        \ENDFOR
+        \FOR{$i\gets 1,\dots, n$}
+            \STATE $l_i \gets binary\_search(func=g_i, min=40, max=300)$
         \ENDFOR
     \end{algorithmic}
 \end{algorithm}
@@ -288,7 +292,13 @@ So whole algorithm ends execution after reasonable amount of time.
 
 \section{Results and Observations}
 
-In following table I've presented line-follower performance on specific tracks from TORCS environment.
+In following Table I've presented line-follower performance on specific tracks from TORCS environment. Human performance was measured on person steering, for the first time, in TORCS environment. His behavior on tracks was very careful, the highest priority was to stay on track all the time.
+
+Line followers are quite reliable agents.
+Dividing track on sections significantly speeds up the agent.
+It is worth noticing, that increasing resolution of speed limits sections, has positive impact on agent performance.
+
+
 While speed limits are significant improvement, they still do not deal with major flaw of the concept.
 Our bot is extremely reactive.
 Human driver see a turn from distance and prepares for it (reduces speed, drifts towards opposite side of the road).
@@ -300,15 +310,16 @@ That's why I resign from extending current concept.
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{ |c|c|c|c|c|}
+    \begin{tabular}{ |p{1.7cm}|p{2.5cm}|p{2cm}|p{2.4cm}|p{2.4cm}|}
           \hline
-          track name & unexperienced human[s] & line-follower[s] & speed limits[s] & 16 sl  \\
+          track name & unexperienced human & line-follower & speed limits with 8 sections & speed limits with 16 sections  \\
           \hline
-          forza &  $122.65$ & $265.51$ & $146.31$   \\
+          forza &  $122.65s$ & $265.51s$ & $146.31s$ & -  \\
           \hline
-          cg\_track\_2 & $79.64$ & $148.84$ &  $84.68$ & $79.71$ \\ 
+          cg\_track\_2 & $79.64s$ & $148.84s$ &  $84.68s$ & $79.71s$ \\ 
+
           \hline
-          cg\_track\_3 & $102.09$ & $133.74$ & $91.86$   \\
+          cg\_track\_3 & $102.09s$ & $133.74s$ & $91.86s$  & $89.29s$  \\
           \hline
     \end{tabular}
         \caption{Line follower performance for specific TORCS tracks}
@@ -321,44 +332,46 @@ That's why I resign from extending current concept.
 \section{Introduction}
 
 
-For very complex tasks creating an algorithm can be very challenging.
- Most of the time we have an input, we define requirements and develop an algorithm which solves our problem.
+For a very complex tasks creating an algorithm can be very challenging.
+Most of the time we have an input, we define requirements and develop an algorithm which solves our problem.
 But sometimes the task is to complex to be solved by an algorithm designed by human.
-In that case programers can use machine learning technique.
-For example let's take email spam detection.
-Users get a lot off unwanted messages on their emails, most of the time they delete just them and that's a great phenomenon.
+In that case programmers can use machine learning technique.
+For example let's take an email spam detection.
+Users get a lot  unwanted messages on their emails, most of the time they delete just them and that's a great phenomenon.
 They unconsciously provide a labeled data sets, on which we can test our solution.
-Creating algorithm which predicts if a message is spam is extremely difficult.
+Creating set of rules, which predicts if a message is a spam, may be extremely difficult.
 We can check for existence of specific keywords, measure length, check upper case letters appearance, but combining all this variables may be extremely complex.
 
  Instead of that, we can try to extract statistical relations in collected data.
 Machine learning algorithms can be applied when we have input and expected output for every sample in the data, but we don't know relation between them.
+From input, we extract a list of important features and combine it into a single items vector.
+Based on that vector, algorithm predicts a decision. 
 We receive not optimal, but approximately good solution for our problem and that's exactly what we want from a spam detector.
 It should help users in omitting unwanted messages, but it's not a problem if it's sometimes wrong.
 
- Primary machine learning problem is classification\cite{Introduction_ML}.
-We want to assign every input to one of given classes.
+Primary machine learning problem is classification\cite{Introduction_ML}.
+We want to assign every item vector to one of given classes.
 In our email example we've got two classes (SPAM, NOT-SPAM), but we can have much more of it.
-Model designed to solve that type of problems is called classifier.
-Quality of classifier can be measured by percentage of correctly predicted classes on the test data sets.
+Model designed to solve that type of problems is called a classifier.
+Quality of a classifier can be measured by the percentage of correctly predicted classes on the test data set.
 
- Problems where output is a single floating point number are called regression \cite{Introduction_ML}.
-Model which predicts price of car is much more useful thant one which assigns car to one of following classes  (cheap, medium, expensive).
+Problems where output is a single floating point number are called regression problems \cite{Introduction_ML}.
+Model which predicts price of a car is much more useful than one which assigns car to one of following classes  (cheap, medium, expensive).
 Such models are called regressors and we can measure their quality by counting mean squared error between real and predicted values on the test data set.
 
 In some problems, single action don't have huge impact on result.
-An action is good only as a part of good policy.
+An action is good only as a part of a good policy.
 Methods which focus on that approach are called reinforcement learning \cite{Introduction_ML}.
 Car driving can be classified as such problem.
-Sometimes there isn't optimal action for current situation, it is rather optimal sequence of action which gives positive result.
+Sometimes there isn't an optimal action for the current situation, it is rather an optimal sequence of actions which gives positive result.
 
 
 \section{Applying Machine Learning for Car Driving Problem}
 
 Accuracy of machine learning models depends heavily on amount of collected data.
-Data set, should describe whole space of problem variables.
+Data set should describe whole space of problem variables values.
 With plenty of data samples, we can extract most meaningful dependencies and predict outputs on real life data samples.
-However recent work by P. Dybiec \cite[2018]{rover}, which focuses on autonomous driving agent, developed for martian rover, shows that it is possible to successfully apply machine learning technics with relatively small data set.
+However recent work by P. Dybiec \cite{rover}, which focuses on autonomous driving agent, developed for martian rover, shows that it is possible to successfully apply machine learning technics with a relatively small data set.
 
   
 I don't have access to huge database of car driving logs, but during agents development I became well TORCS driver.
@@ -374,25 +387,28 @@ From game perspective it is normal agent, but it reacts only on user keyboard in
 
 
 
-First machine learning approach was to develop simple classfier which predicts action for every single data frame during the race.
-Input consist of all state sensors described  in \ref{tab:torcs_sensors} and normalized to fit in range $[-1,1]$.
-To determine classes of actions, I've extracted all unique actions taken by the driver and then labeled them, to generate simple classification problem.
+First machine learning approach was to develop a simple classifier which predicts action for every single data frame during the race.
+Input consist of all state sensors described  in Table \ref{tab:torcs_sensors} and normalized to fit in range $[-1,1]$.
+
 \paragraph{Action parameters}
 \begin{itemize}
     \item \textbf{accel} $\in \{0,1\}$
     \item \textbf{brake} $\in \{0,1\}$ 
     \item \textbf{steer} $\in [-1,1]$
 \end{itemize}
-After splitting the data on train and test data set, I've trained classifiers to predict the best action for current car situation.
-I've used algorithms implemented scikit-learn \cite{scikit_learn} library.
-Results of experiments are shown in table \ref{tab:single_clp_tree}
 
+Action consist of two binary variables and one floating point variable. There are infinitely many potential actions, which can be taken by the agent. To build a classifier, I needed a finite number of available classes. I've checked data set for number of unique actions taken by human driver and it appears there are only 300 of them. I've labeled all actions, and prepared the 300 classes classifier.
 
 \begin{wrapfigure}{R}{0.4\textwidth}
     \includegraphics[width=0.35\textwidth]{img/tree.png}
     \caption{Example of CART. Donwloaded from https://pythonprogramminglanguage.com/decision-tree-visual-example on February 2018 \cite{scrc_manual}}
     \label{fig:CART}
 \end{wrapfigure}
+
+After splitting the data on train and test data set, I've trained classifiers to predict the best action for current car situation.
+I've used algorithms implemented scikit-learn in the \cite{scikit_learn} library.
+Results of experiments are shown in table \ref{tab:single_clp_tree}
+
 I've started with simple Decision Tree classifier.
 CART (classification and regression tree) algorithm produces binary tree which consist of decision nodes and terminal leafs.
 Every node holds a binary condition (for example $\textit{angle} > 0.37$) which passes data frame to one of it's children.
@@ -412,13 +428,13 @@ To predict class of data sample, we average predictions from all trees in the mo
     \centering
     \begin{tabular}{ |c|c|c|c|}
           \hline
-          agent & cg\_track\_2 result [s] & train score & test score \\
+          agent & cg\_track\_2 result & train score & test score \\
           \hline
-          speed\_limits & $84.68$ & - & -\\
+          speed\_limits & $84.68s$ & - & -\\
           \hline
-          CART &  $63.25$ & $0.81$ & $0.65$\\
+          CART &  $63.25s$ & $0.81$ & $0.65$\\
           \hline
-          Random Forest & $65.39$ & $0.99$ & $0.66$ \\
+          Random Forest & $65.39s$ & $0.99$ & $0.66$ \\
           \hline
           
         \end{tabular}
@@ -436,8 +452,8 @@ Anyway, agent can recreate enough human actions, to stay on well known part of t
 It is worth noticing, that using \textbf{distFromStart} (distance from start line according to track middle line) parameter isn't very practical for generalized driving agent.
 My models weren't learning how to drive a vehicle.
 The were rather memorizing right actions for specific section of the track.
-We need model which can be applied also for unseen tracks.
-However without that parameter, all my models were crashing on the track.
+We need a model which can be applied also for unseen tracks.
+However, without that parameter, all my models were crashing on the track.
 They were able only to apply similar actions in similar places.
 
 \section{Two Models Agent}
@@ -453,13 +469,13 @@ To simplify classification task I've decided to use two separate models:
 
 State vector for regressor is the same as on used in single model approach.
 Classifier input is expanded by \textbf{steer} value predicted by the regressor.
-Intuition behind passing value between two models is that, breaking and accelerating during turning the manoeuver, leads to dangerous behaviors.
+Intuition behind passing value between two models is that, breaking and accelerating during the turning, leads to dangerous behaviors.
 Humans tends to reduce the car speed before beginning of the turn.
 Acceleration classifier should depend on expected steering decision.
 
 
-This time I've used MLP (Multi Layer Perceptron) implemented in scikit-lirary \cite{scikit_learn}.
-It is simple neural network model which need more time to train, but is much more powerful than simple decision trees.
+This time I've used MLP (Multi Layer Perceptron) implemented in te scikit-lirary \cite{scikit_learn}.
+It is a simple neural network model which needs more time to train, but is much more powerful than simple decision trees. More informations about neural networks can be found in \cite{neuraln_nets}.
 
 
 Because of hardware limits I was able to train only very simple networks (regressor hidden layers (300,30); classifier hidden layers (200,20) both with hyperbolic tangent activation function).
@@ -468,8 +484,7 @@ All of them are standardized in range [-1,1].
 
 \subsection{Architecture Motivations}
 
-There were two observations in advantage of this architecture.
-
+There are two reasons, why this architecture should perform better than previous one.
 
 First of all, it significantly reduces amount of classes used in classifier.
 Three classes should be covered effectively with amount of collected data.
@@ -520,13 +535,16 @@ Regressor more accurately reflects steering actions which appears in the data se
 Models were trained on from single agent approach (without \textbf{distFromStart} sensor).
 Accuracy of models on testing set is quite reliable \ref{tab:double_models_results}.
 That's the effect of reducing number of actions classes.
-However agent is unable to finish the lap on training track.
+After plenty of experiments, none of trained agents was able to finish the lap on training track.
+Some of agents were just approaching the border and leaving the track.
+Others were capable of crossing only some turns, but not all of them.
+Behavior was extremely random and unacceptable on the race track.
 It appears that steering regressor isn't effective enough.
 
 
 One of ideas to improve these agent, was assumption that, maybe planning driving policy is impossible with only one data frame processed at once.
 To take into account longer period of time, agent remembers state and action from previous time frame and attaches it to both models inputs.
-Results of the experiment are shown in second part of table \ref{tab:double_models_results}.
+Results of the experiment are shown in second part of Table \ref{tab:double_models_results}.
 New approach allows to reduce mean squared error twice of steering regressor on data sets.
 However, agent driving is very aggressive.
 It includes a lot of sharp steering wheel turns even on straight sections of track.
@@ -560,7 +578,7 @@ $$ f(steer) =  \begin{cases}
 To predict \textbf{steer} value we compute $m$ which is output of steering regressor and $d$ which is output of steering supervisor.
 Then we apply function $g$ for those values, and that's our final \textbf{steer} value.
 Function $g$ passes $m$ only when both models agreed on turning direction.
-Also when supervisor predicts no turning action, $g$ decreases $m$ significantly by a constant.
+Also when supervisor predicts no turning action, $g$ divides $m$ significantly by a constant.
 
  $$ g(m, d) =  \begin{cases}
     \frac{m}{c},  &\quad d = 0 \\
@@ -577,10 +595,12 @@ It should give more meaningful knowledge for the agent.
 
 
 
-Training neural network is randomized process, which takes significant amount of time.
+Training neural network is a randomized process, which takes a significant amount of time.
 Agents trained with same architecture can provides completely different performance.
-That's why for current architecture I've used simple reinforcement learning method.
+That's why for current architecture I've used a very simple reinforcement learning method.
 I've trained agents in a loop, ending an algorithm with success only when the current one was capable of safely finishing the race.
+To be honest, huge amount of agents had to be trained, to build develop one.
+Probability of sampling model, which do not slip out of the track, is very low.
 
 
 
@@ -616,9 +636,9 @@ It is first successful agent, which doesn't use \textbf{distFromStart} parameter
     \centering
     \begin{tabular}{ |c|c|c|c|}
           \hline
-          agent & cg\_track\_2 result [s] & train set & test set \\
+          agent & cg\_track\_2 result& train set & test set \\
           \hline
-          \textbf{triple agent} & $63.44$ &   &  \\
+          \textbf{triple agent} & $63.44s$ &   &  \\
           \hline
           Steer regressor error [MSE]&   & $0.0043$ & $0.0046$\\
           \hline
@@ -647,13 +667,13 @@ However to use learning algorithm, our agent must be capable of finishing lap wi
 The problem is that our models have never drive with such small speed.
 It is part of environment, not covered by training set.
 Decisions taken by driver are completely random, and the race ends on the first turn.
-Amount of collected that covers only a small fraction of possible states, so agent has to mirror human driver actions and cannot make his own decisions.
+Amount of collected data covers only a small fraction of possible states, so agent has to mirror human driver actions and cannot make his own decisions.
 
 
 \chapter{Conclusions}
 
 
-Both approaches to problem of car driving in virtual TORCS environment leads to success.
+Both approaches to problem of car driving in virtual TORCS environment are quite successful.
 Heuristic agent, after adjusting speed limits, in reasonable time can finish every race.
 Machine Learning agent is highly effective on the track used to collect data.
 However without huge data set it can't be generalized for driving on new tracks.
@@ -675,31 +695,19 @@ In that case we can more accurately measure, humans drivers intentions.
 
     \item Implementation of neural networks in scikit-library is very basic.
 It can not use a graphic card for computation.
-With usage of libraries designated to neural networks (PyTorch, TensorFlow) it would be possible to precess more data frames during models training and use more  powerful networks architecture.
+With usage of libraries designated to neural networks (PyTorch, TensorFlow \cite{tensor_flow}) it would be possible to precess more data frames during models training and use more  powerful networks architecture.
     \item Agents with machine learning models  can be only as good human drivers, which created the date set.
 It is huge limitation, that's why it is worth to expand heuristic approach.
-Instead of following the line located in the middle of the track, we should drive one lap with very small speed.
-Record shape of the track, and then determine the optimal, smooth, route line and follow it during a real race.
+Instead of following the line located in the middle of the track, we could drive one lap with very small speed.
+Record shape of the track, and then determine the optimal with genetic approach \cite{genetic-optimal-race-line}, smooth, route line and follow it during a real race.
 
     \item More reinforcement learning approach can be also applied.
 Developed agents take into account only current state and try determine best action.
 To encourage smooth driving, agent should try determine best sequence of actions.
-\end{itemize}
-
-
-
-\section{Aditional Problems}
-In this section I've described not mentioned problems , which I encountered during my work.
- 
-
-\begin{itemize}
-    \item \textbf{Transmission}: Chosen architecture didn't allowed me to use automatic transmission included with the torcs game.
-I had to build my own basic automatic transmission system, which is far from perfect.
-I haven't change it during development of different agents, so all results are comparable.
 
     \item TORCS racing server waits only 10ms for answer from agent program.
 In case there is no answer for current state, engine executes last sent action and very often is resulting in losing control over the car.
-While programming in python is very convenient, programer can't manually manage memory.
+While programming in python is very convenient, programmer can't manually manage memory.
 When garbage collector function is called, execution of user code is suspended and it can take much longer than 10ms.
 The only possible solution was turning off garbage collector, which means that my agents never free memory.
 To develop more reliable agents, switching programming language to C++ is advisable, because right know, programs can run for only limited amount of time.
@@ -717,6 +725,14 @@ di Elettronica e Informazione, Politecnico di Milano, Italy, 2011.
 \bibitem{Introduction_ML} Ethem Alpaydin, Introduction to Machine Learning, The MIT Press, 2010
 \bibitem{scikit_learn} Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
 \bibitem{rover} P. Dybiec, "Veryfing the remote control capabilities of rover using neural networks", https://github.com/dyniec/thesis/blob/master/iithesis.pdf Wrocław 2018
+\bibitem{neuraln_nets} Michael A. Nielsen, "Neural Networks and Deep Learning", Determination Press, 2015
+\bibitem{tensor_flow} Martín Abadi, Ashish Agarwal, Paul Barham etc.
+"TensorFlow: Large-scale machine learning on heterogeneous systems",
+2015. Software available from tensorflow.org.
+\bibitem{py_torch} Adam Paszke, Sam Gross, Soumith Chintala etc., "Automatic differentiation in PyTorch", 2017
+\bibitem{autonomus_driving} Bimbraw, Keshav. "Autonomous Cars: Past, Present and Future - A Review of the Developments in the Last Century, the Present Scenario and the Expected Future of Autonomous Vehicle Technology.", 2015
+\bibitem{genetic-optimal-race-line} L. Cardamone, D. Loiacono, P. Lanzi, and A. Bardelli, "Searching for the Optimal Racing Line Using Genetic Algorithms", 2010
+
 
 \end{thebibliography}
 
