@@ -60,7 +60,7 @@ Agents developed by the author use heuristic and machine learning technics. Thei
 Autonomous cars are very popular subject nowadays.
 Most of accidents on roads, occurs due to humans mistakes.
 Programs responsible for driving cars are called agents.
-Agents don't get tiered or distracted while driving a vehicle.
+Agents don't get tired or distracted while driving a vehicle.
 They also can save a lot of fuel with optimal decisions.
 That's why companies around the globe put a lot of effort into making reliable car software for autonomous driving \cite{autonomus_driving}.
 It is very interesting task from artificial intelligence perspective. Description of the world is huge.
@@ -120,7 +120,7 @@ Full list of parameters provided by the game engine can be found in the SCRC com
 \subsection{State Parameters}
 
 Sensors allow to determine exact car position on the track, and shape of the track.
-Track sensors are straight lines, so agent has informations only about environment in front of it. Agent don't know how sharp and long the turn is before beginning of the  manuever.
+Track sensors are straight lines, so agent has informations only about environment in front of it. Agent don't know how sharp and long the turn is before beginning of the  maneuver.
 
 \begin{figure}[h]
     \centering
@@ -156,7 +156,7 @@ Opponents sensors are available in the environment, but they are not used in thi
      \hline        
      track &  $[0, 200]$ (m) & Vector of 19 range finder sensors: each sensors returns the distance between the track edge and the car within a range of 200 meters. \\
      \hline
-     trackPos & $( -\infty, +\infty )$ & Normalized distance between the car and the track axis. Values beetwen $[-1, 1]$ means that the car is on the track. \\
+     trackPos & $( -\infty, +\infty )$ & Normalized distance between the car and the track axis. Values between $[-1, 1]$ means that the car is on the track. \\
      \hline
      wheelSpinVel & $[0, +\infty)$ (rad/s) & Vector of 4 sensors representing the rotation speed of wheels. \\
      \hline
@@ -188,8 +188,8 @@ Opponents sensors are available in the environment, but they are not used in thi
 
 Actions in TORCS are simpler than ones taken by drivers in real life.
 In virtual environment braking and accelerating are binary decisions (with physical pedals you can graduate action force).
-Steering value, on the other hand is continues parameter, similar to the real car steering wheel.
-If gear value differs from  gear value given in state, game engine changes the gear to one specified in te action.
+Steering value, on the other hand is continuous parameter, similar to the real car steering wheel.
+If gear value differs from  gear value given in state, game engine changes the gear to one specified in the action.
 
 \subsection{Transmission}
 
@@ -197,7 +197,7 @@ If gear value differs from  gear value given in state, game engine changes the g
 Chosen architecture didn’t allowed me to use automatic transmission included with the torcs game.
 I had to build my own basic automatic transmission system, which is far from perfect.
 It is set of rules based on \textbf{speedX} and \textbf{rpm} values from game state determining optimal \textbf{gear} value.
-Coefficients of transmission were chosen by observing default TORCS automatic transmission bheaviour during multiple races.
+Coefficients of transmission were chosen by observing default TORCS automatic transmission behavior during multiple races.
 My automatic transmission is used in all experiments and learning algorithms, so all results in this work are comparable.
 
 
@@ -371,7 +371,7 @@ Sometimes there isn't an optimal action for the current situation, it is rather 
 Accuracy of machine learning models depends heavily on amount of collected data.
 Data set should describe whole space of problem variables values.
 With plenty of data samples, we can extract most meaningful dependencies and predict outputs on real life data samples.
-However recent work by P. Dybiec \cite{rover}, which focuses on autonomous driving agent, developed for martian rover, shows that it is possible to successfully apply machine learning technics with a relatively small data set.
+However recent work by P. Dybiec \cite{rover}, which focuses on autonomous driving agent, developed for martian rover, shows that it is possible to successfully apply machine learning techniques with a relatively small data set.
 
   
 I don't have access to huge database of car driving logs, but during agents development I became well TORCS driver.
@@ -411,7 +411,7 @@ Results of experiments are shown in table \ref{tab:single_clp_tree}
 
 I've started with simple Decision Tree classifier.
 CART (classification and regression tree) algorithm produces binary tree which consist of decision nodes and terminal leafs.
-Every node holds a binary condition (for example $\textit{angle} > 0.37$) which passes data frame to one of it's children.
+Every node holds a binary condition (for example $\textit{angle} > 0.37$) which passes dataframe to one of its children.
 Every leaf is labeled by class which it represents.
 To classify specific input we traverse a path directed by decision nodes.
 To choose variable and value used in condition creation we are minimizing impurity function.
@@ -474,7 +474,7 @@ Humans tends to reduce the car speed before beginning of the turn.
 Acceleration classifier should depend on expected steering decision.
 
 
-This time I've used MLP (Multi Layer Perceptron) implemented in te scikit-lirary \cite{scikit_learn}.
+This time I've used MLP (Multi Layer Perceptron) implemented in te scikit-library \cite{scikit_learn}.
 It is a simple neural network model which needs more time to train, but is much more powerful than simple decision trees. More informations about neural networks can be found in \cite{neuraln_nets}.
 
 
@@ -695,7 +695,7 @@ In that case we can more accurately measure, humans drivers intentions.
 
     \item Implementation of neural networks in scikit-library is very basic.
 It can not use a graphic card for computation.
-With usage of libraries designated to neural networks (PyTorch \cite{py_torch}, TensorFlow \cite{tensor_flow}) it would be possible to precess more data frames during models training and use more  powerful networks architecture.
+With usage of libraries designated to neural networks (PyTorch \cite{py_torch}, TensorFlow \cite{tensor_flow}) it would be possible to process more data frames during models training and use more  powerful networks architecture.
 
     \item While working with TORCS environment, I've discovered feature undocumented in the manual.
     Game state passed by server, contains also x,y,z coordinates of the car.
@@ -721,7 +721,7 @@ In case there is no answer for current state, engine executes last sent action a
 While programming in python is very convenient, programmer can't manually manage memory.
 When garbage collector function is called, execution of user code is suspended and it can take much longer than 10ms.
 The only possible solution was turning off garbage collector, which means that my agents never free memory.
-To develop more reliable agents, switching programming language to C++ is advisable, because right know, programs can run for only limited amount of time.
+To develop more reliable agents, switching programming language to C++ is advisable, because right now, programs can run for only limited amount of time.
 \end{itemize}
 
 
@@ -735,7 +735,7 @@ Racing Championship: Competition Software Manual”, Technical Report 2011.06, D
 di Elettronica e Informazione, Politecnico di Milano, Italy, 2011.
 \bibitem{Introduction_ML} Ethem Alpaydin, Introduction to Machine Learning, The MIT Press, 2010
 \bibitem{scikit_learn} Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
-\bibitem{rover} P. Dybiec, "Veryfing the remote control capabilities of rover using neural networks", https://github.com/dyniec/thesis/blob/master/iithesis.pdf Wrocław 2018
+\bibitem{rover} P. Dybiec, "Verifying the remote control capabilities of rover using neural networks", https://github.com/dyniec/thesis/blob/master/iithesis.pdf Wrocław 2018
 \bibitem{neuraln_nets} Michael A. Nielsen, "Neural Networks and Deep Learning", Determination Press, 2015
 \bibitem{tensor_flow} Martín Abadi, Ashish Agarwal, Paul Barham etc.
 "TensorFlow: Large-scale machine learning on heterogeneous systems",
