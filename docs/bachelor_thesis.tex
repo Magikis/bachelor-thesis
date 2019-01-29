@@ -314,7 +314,7 @@ That's why I resign from extending current concept.
           \hline
           track name & unexperienced human & line-follower & speed limits with 8 sections & speed limits with 16 sections  \\
           \hline
-          forza &  $122.65s$ & $265.51s$ & $146.31s$ & -  \\
+          forza &  $122.65s$ & $265.51s$ & $146.31s$ & not tested  \\
           \hline
           cg\_track\_2 & $79.64s$ & $148.84s$ &  $84.68s$ & $79.71s$ \\ 
 
@@ -695,15 +695,26 @@ In that case we can more accurately measure, humans drivers intentions.
 
     \item Implementation of neural networks in scikit-library is very basic.
 It can not use a graphic card for computation.
-With usage of libraries designated to neural networks (PyTorch, TensorFlow \cite{tensor_flow}) it would be possible to precess more data frames during models training and use more  powerful networks architecture.
-    \item Agents with machine learning models  can be only as good human drivers, which created the date set.
-It is huge limitation, that's why it is worth to expand heuristic approach.
-Instead of following the line located in the middle of the track, we could drive one lap with very small speed.
-Record shape of the track, and then determine the optimal with genetic approach \cite{genetic-optimal-race-line}, smooth, route line and follow it during a real race.
+With usage of libraries designated to neural networks (PyTorch \cite{py_torch}, TensorFlow \cite{tensor_flow}) it would be possible to precess more data frames during models training and use more  powerful networks architecture.
+
+    \item While working with TORCS environment, I've discovered feature undocumented in the manual.
+    Game state passed by server, contains also x,y,z coordinates of the car.
+    It allows for accurate mapping of the track.
+    We can use previously recorded track to improve speed limits agent performance.
+    We can observe curvature of the track and instead of dividing the track on equal sections, we can place speed limits in a smart way.
+    Splitting the track on turns and straight sections, should have positive impact.
+
+    \item With recorded track, we can also focus more on determining optimal driving path.
+    Such path can be found with implementation of genetic algorithms. More about that approach can be read in \cite{genetic-optimal-race-line}.
+    In that case we can support agent with information, how close it is to the optimal racing line, or even force the agent to follow it.
+    
+    \item In high-end rally competitions, on passenger seat there is always a co-driver.
+    He navigates the driver, informs him what lies ahead, instructs about severity of the turns etc. With recorded track we can, pass similar informations to machine learning models. Based on the curvature of the track, we can extract warning about dangerous section ahead or predict optimal speed for such track fragment.
+    It's crucial feature, for agents generalization and stable behavior in previously unseen environment.
 
     \item More reinforcement learning approach can be also applied.
-Developed agents take into account only current state and try determine best action.
-To encourage smooth driving, agent should try determine best sequence of actions.
+    Developed agents take into account only current state and try determine best action.
+    To encourage smooth driving, agent should try determine best sequence of actions.
 
     \item TORCS racing server waits only 10ms for answer from agent program.
 In case there is no answer for current state, engine executes last sent action and very often is resulting in losing control over the car.
