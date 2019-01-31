@@ -1,5 +1,5 @@
 # Bachelor Thesis
-### Developing car driving agent in the TORCS virtual environment
+## Developing car driving agent in the TORCS virtual environment
 
 
 
