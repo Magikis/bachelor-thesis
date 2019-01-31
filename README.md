@@ -6,6 +6,13 @@ Developing car driving agent in the TORCS virtual environment
 Thesis -> https://github.com/Magikis/bachelor-thesis/blob/master/docs/bachelor_thesis.pdf
 
 
+# Requirements
+
+* Python >=3.6
+* TORCS 1.3.7 with SCRC patch
+* numpy, sklearn, scikit, arrow
+  
+
 # Instructions
 
 
