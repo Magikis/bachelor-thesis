@@ -45,8 +45,9 @@ W pracy zostali przedstawienie agenci, stworzeni przez autora,  korzystający z 
 }
 
 \englishabstract{
-The subject of this work is the implementation and testing of agents driving a vehicle in a virtual TORCS environment.
-Agents developed by the author use heuristic and machine learning technics. Their implementation and performance (compared to human drivers) is described, along with contribution to various subjects as function optimization, regression, classification and supervised learning.
+The subject of this work is the implementation and testing of agents driving a vehicle in the virtual TORCS environment.
+Agents developed by the author use heuristic and machine learning techniques.
+Their implementation and performance (compared to human drivers) is described, along with contribution to various subjects as function optimization, regression, classification and supervised learning.
 }
 
 
@@ -61,13 +62,13 @@ Autonomous cars are very popular subject nowadays.
 Most of accidents on roads, occurs due to humans mistakes.
 Programs responsible for driving cars are called agents.
 Agents don't get tired or distracted while driving a vehicle.
-They also can save a lot of fuel with optimal decisions.
+They also can save a lot of fuel with optimal driving decisions.
 That's why companies around the globe put a lot of effort into making reliable car software for autonomous driving \cite{autonomus_driving}.
 It is very interesting task from artificial intelligence perspective. Description of the world is huge.
 It includes near objects, borders of the street, speed, turning force, engine rotation and much more.
 The output of such agent is quite simple compared to the input size.
 We need only to specify new position of steering wheel and decision if we want to speed up or slow down.
-In this work  I built agents  capable of drive safely in virtual TORCS environment. I find that heuristic, and machine learning models can both achieve acceptable performance.
+In this work  I built agents  capable of drive safely in the virtual TORCS environment. I find that heuristic, and machine learning models can both achieve acceptable performance.
 
 
 
@@ -90,22 +91,23 @@ Due to fact, I have much more experience with programming in high level language
 
 \section{Simulated Car Racing Championship}
 
-SCRC competition took place between 2007 - 2015 with some breaks. It was organized by the University of Adelaide and the Politecnico de Milano.
-They used TORCS engine for competition, but organizers provided official patch which changed architecture of the program \cite{SCRC}.
-After patching, TORCS became client-server application which allows multiple bots communicate with game engine via UDP connections. 
-
-\begin{wrapfigure}{R}{0.6\textwidth}
-    \includegraphics[width=0.6\textwidth]{img/scr_architecture.png}
+\begin{wrapfigure}{R}{0.5\textwidth}
+    \includegraphics[width=0.5\textwidth]{img/scr_architecture.png}
     \caption{Simulated Car Racing Championship - architecture overview \cite{scrc_manual}}
     \label{fig:scrc_arc}
 \end{wrapfigure}
 
-Server sends current sensor inputs (track border, speed, lap time, etc...) and waits for 10ms for the client action response (gas, break, steer, etc...).
- API details are described in competition manual \cite{scrc_manual}.
- With that change participants can't choose whatever language they want.
- That's why I decided to use patched version of TORCS game engine in version 1.3.7
+SCRC competition took place between 2007 - 2015 with some breaks. It was organized by the University of Adelaide and the Politecnico de Milano.
+They used TORCS engine for competition, but organizers provided official patch which changed architecture of the program \cite{SCRC}.
+After patching, TORCS becomes client-server application which allows multiple bots to communicate with game engine via UDP connections. 
 
-Organizers provided "clients" programs only in Java and C++ languages.
+
+Server sends current sensor inputs (track border, speed, lap time, etc...) and waits for 10ms for the client action response (gas, break, steer, etc...).
+API details are described in competition manual \cite{scrc_manual}.
+With that change participants can choose whatever language they want.
+That's why I decided to use patched version of TORCS game engine in version 1.3.7
+
+Organizers provided "clients" example programs only in Java and C++ languages.
 I didn't want to implement communication interface on my own, because it's time consuming  and uninteresting task.
 After some research, I found \url{http://xed.ch/p/snakeoil} project, which provides Python class handling communication with TORCS server.
 It allowed me to add layer of abstraction and focus directly on driving functionality.
@@ -120,7 +122,8 @@ Full list of parameters provided by the game engine can be found in the SCRC com
 \subsection{State Parameters}
 
 Sensors allow to determine exact car position on the track, and shape of the track.
-Track sensors are straight lines, so agent has informations only about environment in front of it. Agent don't know how sharp and long the turn is before beginning of the  maneuver.
+Track sensors are straight lines, so agent has informations only about environment in front of it.
+Agent don't know how sharp and long the turn is before entering it.
 
 \begin{figure}[h]
     \centering
@@ -130,7 +133,7 @@ Track sensors are straight lines, so agent has informations only about environme
 \end{figure}
 
 
-Opponents sensors are available in the environment, but they are not used in this work. Agents drive alone on the track to focus mostly on agent performance without randomness resulting from the behavior of opponents.
+Opponents sensors are available in the environment, but they are not used in this work. Agents drive alone on the track to focus on agent performance without randomness resulting from the behavior of opponents.
 
 
 
@@ -140,7 +143,7 @@ Opponents sensors are available in the environment, but they are not used in thi
      \hline
      \textbf{Name} & \textbf{Range (unit)} & \textbf{Description} \\ 
      \hline
-     angle & $[-\pi, +\pi]$ (rad) & Angle between the car direction and the direction the track axis. \\  
+     angle & $[-90, +90]$ (deg) & Angle between the car direction and the direction the track axis. \\  
      \hline
      distFromStart & $[0, +\infty)$ (m) & Distance of the car from the start line along the track line. \\
      \hline
@@ -187,7 +190,7 @@ Opponents sensors are available in the environment, but they are not used in thi
 \end{table}
 
 Actions in TORCS are simpler than ones taken by drivers in real life.
-In virtual environment braking and accelerating are binary decisions (with physical pedals you can graduate action force).
+In virtual environment braking and accelerating are binary decisions (with physical pedals you could graduate action force).
 Steering value, on the other hand is continuous parameter, similar to the real car steering wheel.
 If gear value differs from  gear value given in state, game engine changes the gear to one specified in the action.
 
@@ -212,17 +215,17 @@ The first approach to the problem was developing simple bot which follows the tr
     \caption{Calculate steer value}
     \label{alg:steer}
     \begin{algorithmic}
-        \IF{$abs(trackPos) < 0.2$} 
-        \STATE {$steer\_value :=  angle * \epsilon$}
+        \IF{$abs(state.trackPos) < 0.2$} 
+        \STATE {$action.steer :=  state.angle * \epsilon$}
         \ELSE 
-        \STATE {$target\_angle := trackPos * 90$}
-        \STATE {$steer\_value := sign(angle - target\_angle) * 0.35$}
+        \STATE {$target\_angle := state.trackPos * 90$}
+        \STATE {$action.steer := sign(state.angle - target\_angle) * 0.35$}
         \ENDIF
     \end{algorithmic}
 \end{algorithm}
 
 Every time, absolute value of \textbf{trackPos} sensor (normalized position of the car on the track between $ [-1, +1] $) is relatively small ($ < 0.2 $) delicate course corrections are applied. It allows to avoid zigzag driving, when close to the middle of the track
-When \textbf{trackPos} is bigger than given threshold, algorithm computes target\_angle which should lead to better position of the car.
+When \textbf{trackPos} is bigger than given threshold, algorithm computes target\_angle which should lead to a better position of the car.
 Then agent tries to reach target\_angle, by applying constant steer magnitude of $0.35$.
 Speed of the car is also limited to 80 km/h.
 Several configurations of constant parameters were tested and current configuration allows bot to safely drive on every track.
@@ -253,10 +256,10 @@ $$ f(l_1, l_2, \dots, l_n ) =  \begin{cases}
   \end{cases}
  $$
 
-I was trying to implement genetic algorithm for finding optimal limits for given a track, but it appears that game engine, even with turned graphics off, isn't as fast as I anticipated.
-It takes almost 20 seconds, to complete one lap.
+I was trying to implement genetic algorithm for finding optimal limits for a given track, but it appears that the game engine, even with turned the graphics off, isn't as fast as I anticipated.
+It takes almost 20 seconds, to complete one lap on my personal computer.
 Simple genetic algorithm would need long hours to find approximately good solution.
-I've used two following observations while developing my optimization algorithm.
+I've used following observations while developing my optimization algorithm.
 
 \begin{itemize}
     \item  $l_i \in [40, 300]$: When car speed is set to value below 40 km/h, the maximum duration of the lap is exceeded. It results in agent disqualification. Car driven by the agent has maximum speed below 300 km/h.
@@ -268,7 +271,7 @@ I've used two following observations while developing my optimization algorithm.
 \end{itemize}
 
 
-To find maximum of $g_i(x)$ we need previously computed optimal $l_1, \dots, l_{i-1}$, and $l_{i+1}, \dots, l_n$ set to 40, to be sure that car won't fell out from the track. 
+To find maximum of $g_i(x)$ we need previously computed optimal $l_1, \dots, l_{i-1}$ values, and $l_{i+1}, \dots, l_n$ set to 40, to be sure that car won't fell out from the track. 
 I've implemented algorithm \ref{alg:speed_limits}, which uses induction and binary search to find optimum, for every section. 
 It finds maximal x, while $g(x) \neq \infty$.
 After algorithm, $l$ are optimal speed limits for specific track sections.
@@ -288,11 +291,11 @@ After algorithm, $l$ are optimal speed limits for specific track sections.
 
 
 For every section it uses around 12 game engine runs.
-So whole algorithm ends execution after reasonable amount of time.
+So whole algorithm ends execution in reasonable amount of time.
 
 \section{Results and Observations}
 
-In following Table I've presented line-follower performance on specific tracks from TORCS environment. Human performance was measured on person steering, for the first time, in TORCS environment. His behavior on tracks was very careful, the highest priority was to stay on track all the time.
+In Table \ref{tab:line_follower}, I've presented line-follower agents performance on specific tracks from the TORCS environment. Additional test, with increased sections resolution was also performed. Human performance was measured on a person steering, for the first time, in TORCS environment. His behavior on tracks was very careful, the highest priority was to stay on track all the time.
 
 Line followers are quite reliable agents.
 Dividing track on sections significantly speeds up the agent.
@@ -312,7 +315,7 @@ That's why I resign from extending current concept.
     \centering
     \begin{tabular}{ |p{1.7cm}|p{2.5cm}|p{2cm}|p{2.4cm}|p{2.4cm}|}
           \hline
-          track name & unexperienced human & line-follower & speed limits with 8 sections & speed limits with 16 sections  \\
+          track name & unexperienced human & line-follower & speed limits divided on 8 sections & speed limits divided on 16 sections  \\
           \hline
           forza &  $122.65s$ & $265.51s$ & $146.31s$ & not tested  \\
           \hline
@@ -342,8 +345,8 @@ They unconsciously provide a labeled data sets, on which we can test our solutio
 Creating set of rules, which predicts if a message is a spam, may be extremely difficult.
 We can check for existence of specific keywords, measure length, check upper case letters appearance, but combining all this variables may be extremely complex.
 
- Instead of that, we can try to extract statistical relations in collected data.
-Machine learning algorithms can be applied when we have input and expected output for every sample in the data, but we don't know relation between them.
+Instead of that, we can try to extract statistical relations in the collected data.
+Machine learning algorithms can be applied when we have input and expected output for every sample from the data, but we don't know relation between them.
 From input, we extract a list of important features and combine it into a single items vector.
 Based on that vector, algorithm predicts a decision. 
 We receive not optimal, but approximately good solution for our problem and that's exactly what we want from a spam detector.
@@ -469,7 +472,7 @@ To simplify classification task I've decided to use two separate models:
 
 State vector for regressor is the same as on used in single model approach.
 Classifier input is expanded by \textbf{steer} value predicted by the regressor.
-Intuition behind passing value between two models is that, breaking and accelerating during the turning, leads to dangerous behaviors.
+Intuition behind passing that value between two models is that, breaking and accelerating during the turning, leads to dangerous behaviors.
 Humans tends to reduce the car speed before beginning of the turn.
 Acceleration classifier should depend on expected steering decision.
 
@@ -599,7 +602,7 @@ Training neural network is a randomized process, which takes a significant amoun
 Agents trained with same architecture can provides completely different performance.
 That's why for current architecture I've used a very simple reinforcement learning method.
 I've trained agents in a loop, ending an algorithm with success only when the current one was capable of safely finishing the race.
-To be honest, huge amount of agents had to be trained, to build develop one.
+To be honest, huge amount of agents had to be trained, to develop a good one.
 Probability of sampling model, which do not slip out of the track, is very low.
 
 
@@ -708,8 +711,9 @@ With usage of libraries designated to neural networks (PyTorch \cite{py_torch}, 
     Such path can be found with implementation of genetic algorithms. More about that approach can be read in \cite{genetic-optimal-race-line}.
     In that case we can support agent with information, how close it is to the optimal racing line, or even force the agent to follow it.
     
-    \item In high-end rally competitions, on passenger seat there is always a co-driver.
-    He navigates the driver, informs him what lies ahead, instructs about severity of the turns etc. With recorded track we can, pass similar informations to machine learning models. Based on the curvature of the track, we can extract warning about dangerous section ahead or predict optimal speed for such track fragment.
+    \item In high-end rally competitions, in passenger seat there is always a co-driver.
+    He navigates the driver, informs him what lies ahead, instructs about severity of the turns and etc.
+    With recorded track we can, pass similar informations to machine learning models. Based on the curvature of the track, we can extract warning about dangerous section ahead or predict optimal speed for such track fragment.
     It's crucial feature, for agents generalization and stable behavior in previously unseen environment.
 
     \item More reinforcement learning approach can be also applied.
