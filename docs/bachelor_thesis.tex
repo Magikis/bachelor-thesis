@@ -133,7 +133,10 @@ Agent don't know how sharp and long the turn is before entering it.
 \end{figure}
 
 
-Opponents sensors are available in the environment, but they are not used in this work. Agents drive alone on the track to focus on agent performance without randomness resulting from the behavior of opponents.
+Opponents sensors are available in the environment, but they are not used in this work.
+Agents drive alone on the track (TORCS practice mode only) to focus on agent performance without randomness resulting from the behavior of opponents.
+Racing with other agents on the track, can be a topic for a new paper. 
+
 
 
 
@@ -189,17 +192,19 @@ Opponents sensors are available in the environment, but they are not used in thi
     \caption{\label{tab:torcs_actions}Description of the available  action parameters. Cited from \cite{scrc_manual}}
 \end{table}
 
-Actions in TORCS are simpler than ones taken by drivers in real life.
+Actions in TORCS are simpler than ones taken by drivers in a real life.
 In virtual environment braking and accelerating are binary decisions (with physical pedals you could graduate action force).
 Steering value, on the other hand is continuous parameter, similar to the real car steering wheel.
-If gear value differs from  gear value given in state, game engine changes the gear to one specified in the action.
+If a gear value differs from a gear value given in state, game engine changes the gear to one specified in the action.
 
 \subsection{Transmission}
 
 
 Chosen architecture didn’t allowed me to use automatic transmission included with the torcs game.
 I had to build my own basic automatic transmission system, which is far from perfect.
-It is set of rules based on \textbf{speedX} and \textbf{rpm} values from game state determining optimal \textbf{gear} value.
+It is a set rules determining optimal \textbf{gear} value.
+If \textbf{rpm} value is higher than 9000, agent changes up the gear. If \textbf{speedX} drops bellow constant specified for every gear (for example 100km/h for gear 3), agent changes down the gear.
+
 Coefficients of transmission were chosen by observing default TORCS automatic transmission behavior during multiple races.
 My automatic transmission is used in all experiments and learning algorithms, so all results in this work are comparable.
 
@@ -212,7 +217,7 @@ The first approach to the problem was developing simple bot which follows the tr
 
 
 \begin{algorithm}
-    \caption{Calculate steer value}
+    \caption{Calculate steer value for a state}
     \label{alg:steer}
     \begin{algorithmic}
         \IF{$abs(state.trackPos) < 0.2$} 
@@ -224,11 +229,11 @@ The first approach to the problem was developing simple bot which follows the tr
     \end{algorithmic}
 \end{algorithm}
 
-Every time, absolute value of \textbf{trackPos} sensor (normalized position of the car on the track between $ [-1, +1] $) is relatively small ($ < 0.2 $) delicate course corrections are applied. It allows to avoid zigzag driving, when close to the middle of the track
+Every time, absolute value of \textbf{trackPos} sensor (normalized position of the car on the track between $ [-1, +1] $) is relatively small ($ < 0.2 $) delicate course corrections are applied. It allows to avoid zigzag driving, when close to the middle of the track.
 When \textbf{trackPos} is bigger than given threshold, algorithm computes target\_angle which should lead to a better position of the car.
 Then agent tries to reach target\_angle, by applying constant steer magnitude of $0.35$.
 Speed of the car is also limited to 80 km/h.
-Several configurations of constant parameters were tested and current configuration allows bot to safely drive on every track.
+Several configurations of constant parameters were tested and current configuration hopefully allows bot to safely drive on every track.
 
 
 I am aware that limiting turning force, has huge negative impact on bot performance.
@@ -273,7 +278,7 @@ I've used following observations while developing my optimization algorithm.
 
 To find maximum of $g_i(x)$ we need previously computed optimal $l_1, \dots, l_{i-1}$ values, and $l_{i+1}, \dots, l_n$ set to 40, to be sure that car won't fell out from the track. 
 I've implemented algorithm \ref{alg:speed_limits}, which uses induction and binary search to find optimum, for every section. 
-It finds maximal x, while $g(x) \neq \infty$.
+The loop invariant (agent with current speed limits $l$, safely finishes the lap) is preserved during execution.
 After algorithm, $l$ are optimal speed limits for specific track sections.
 
 \begin{algorithm}
@@ -302,7 +307,7 @@ Dividing track on sections significantly speeds up the agent.
 It is worth noticing, that increasing resolution of speed limits sections, has positive impact on agent performance.
 
 
-While speed limits are significant improvement, they still do not deal with major flaw of the concept.
+While speed limits are significant improvements, they still do not deal with the major flaw of the concept.
 Our bot is extremely reactive.
 Human driver see a turn from distance and prepares for it (reduces speed, drifts towards opposite side of the road).
 On the other hand my bot turns the steering wheel only when it drifts away from the middle of the track (this happens after entering the turn).
@@ -377,8 +382,8 @@ With plenty of data samples, we can extract most meaningful dependencies and pre
 However recent work by P. Dybiec \cite{rover}, which focuses on autonomous driving agent, developed for martian rover, shows that it is possible to successfully apply machine learning techniques with a relatively small data set.
 
   
-I don't have access to huge database of car driving logs, but during agents development I became well TORCS driver.
-So I decided to record my performance on race tracks.
+I don't have access to huge database of car driving logs, but during agents development I became quite well TORCS driver.
+So I've decided to record my performance on race tracks.
 
 Unfortunately TORCS environment does not have an option to log sensors data and driver actions.
 It is planned to add this functionality in the future development.
@@ -457,7 +462,7 @@ My models weren't learning how to drive a vehicle.
 The were rather memorizing right actions for specific section of the track.
 We need a model which can be applied also for unseen tracks.
 However, without that parameter, all my models were crashing on the track.
-They were able only to apply similar actions in similar places.
+They were able only to apply similar actions on recorded sections of the track. Without \textbf{distFromStart} parameter, agent don't know on which section it is, so it struggles to reproduce human actions.
 
 \section{Two Models Agent}
 
@@ -551,7 +556,7 @@ Results of the experiment are shown in second part of Table \ref{tab:double_mode
 New approach allows to reduce mean squared error twice of steering regressor on data sets.
 However, agent driving is very aggressive.
 It includes a lot of sharp steering wheel turns even on straight sections of track.
-It is still unable to reach the finish line without a crash.
+Most of the time it crashes even before third turn, so remembering previous state has negative impact on agent performance.
 
 Even with significant improvement in accuracy, models are still not capable to drive safely on the track.
 Racing cars, drives extremely fast and one sharp turn in opposite direction, can causes inevitable crash situation.
@@ -611,13 +616,13 @@ Probability of sampling model, which do not slip out of the track, is very low.
 
 
 
-Every single model was a neural network from scikit-learn library \cite{scikit_learn}, with following parameters given in table \ref{tab:triple_models_nn_params}.
+Every single model was a neural network from scikit-learn library \cite{scikit_learn}, with following parameters given in Table \ref{tab:triple_models_nn_params}. Evaluation of learning process is shown in Table \ref{tab:triple_models_learning_results}
 
 \begin{table}[h]
     \centering
     \begin{tabular}{ |c|c|c|}
           \hline
-          Model & hidden layers & activation function \\
+          \textbf{Model} & \textbf{hidden layers} & \textbf{activation function} \\
           \hline
           Steering regressor & (500,30) &  tanh  \\
           \hline
@@ -630,27 +635,43 @@ Every single model was a neural network from scikit-learn library \cite{scikit_l
         \label{tab:triple_models_nn_params}
 \end{table}
 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|}
+          \hline
+          \textbf{Measure} &  \textbf{train set} & \textbf{test set} \\
+          \hline
+          Steer regressor error [MSE] & $0.0043$ & $0.0046$\\
+          \hline
+          Steer supervisor score &  $0.94$ & $0.90$ \\
+          \hline
+          Acceleration classifier score   & $0.99$ & $0.98$ \\
+          \hline       
+        \end{tabular}
+        \caption{Triple models training score}
+        \label{tab:triple_models_learning_results}
+\end{table}
+
 Agent was tested on cg\_track\_2 and it's performance is shown in table \ref{tab:triple_models_results}.
 It is first successful agent, which doesn't use \textbf{distFromStart} parameter during models training.
 
 
 
- \begin{table}[h]
+
+\begin{table}[h]
     \centering
-    \begin{tabular}{ |c|c|c|c|}
+    \begin{tabular}{ |c|c|}
           \hline
-          agent & cg\_track\_2 result& train set & test set \\
-          \hline
-          \textbf{triple agent} & $63.44s$ &   &  \\
-          \hline
-          Steer regressor error [MSE]&   & $0.0043$ & $0.0046$\\
-          \hline
-          Steer supervisor score & & $0.94$ & $0.90$ \\
-          \hline
-          Acceleration classifier score &  & $0.99$ & $0.98$ \\
+           \textbf{driver} & \textbf{cg\_track\_2 result} \\
+           \hline
+           triple agent & $63.44s$  \\
+           \hline
+          unexperienced human & $79.64s$ \\
           \hline       
+          line-follower with 16 speed limits sections & $79.71s$ \\
+        \hline
         \end{tabular}
-        \caption{Triple models agents performance}
+        \caption{Triple models agents performance comparison}
         \label{tab:triple_models_results}
 
 \end{table}
@@ -712,8 +733,8 @@ With usage of libraries designated to neural networks (PyTorch \cite{py_torch}, 
     In that case we can support agent with information, how close it is to the optimal racing line, or even force the agent to follow it.
     
     \item In high-end rally competitions, in passenger seat there is always a co-driver.
-    He navigates the driver, informs him what lies ahead, instructs about severity of the turns and etc.
-    With recorded track we can, pass similar informations to machine learning models. Based on the curvature of the track, we can extract warning about dangerous section ahead or predict optimal speed for such track fragment.
+    He navigates the driver, informs him what lies ahead, instructs about severity of the turns, etc.
+    With recorded track we can pass similar informations to machine learning models. Based on the curvature of the track, we can extract warnings about dangerous section ahead or predict the optimal speed for such track fragment.
     It's crucial feature, for agents generalization and stable behavior in previously unseen environment.
 
     \item More reinforcement learning approach can be also applied.
@@ -721,11 +742,11 @@ With usage of libraries designated to neural networks (PyTorch \cite{py_torch}, 
     To encourage smooth driving, agent should try determine best sequence of actions.
 
     \item TORCS racing server waits only 10ms for answer from agent program.
-In case there is no answer for current state, engine executes last sent action and very often is resulting in losing control over the car.
-While programming in python is very convenient, programmer can't manually manage memory.
-When garbage collector function is called, execution of user code is suspended and it can take much longer than 10ms.
-The only possible solution was turning off garbage collector, which means that my agents never free memory.
-To develop more reliable agents, switching programming language to C++ is advisable, because right now, programs can run for only limited amount of time.
+    In case there is no answer for current state, engine executes last sent action and very often is resulting in losing control over the car.
+    While programming in python is very convenient, programmer can't manually manage memory.
+    When garbage collector function is called, execution of user code is suspended and it can take much longer than 10ms.
+    The only possible solution was turning off garbage collector, which means that my agents never free memory.
+    To develop more reliable agents, switching programming language to one with user memory management (C++ for instance) is advisable, because right now, programs can run for only limited amount of time.
 \end{itemize}
 
 
